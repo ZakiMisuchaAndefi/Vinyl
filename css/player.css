@@ -964,9 +964,11 @@
 
 /* ==========================================================================
    Now Playing — komposisi "Vinyl" (frame 05 & 06)
-   Panel kaca penuh di atas latar hitam dengan tint lembut. Tanpa lirik:
-   satu kolom 410px (sampul 344). Dengan lirik: kolom kiri 352px + lirik
-   568px, dengan transisi lembut seperti Apple Music.
+   Panel kaca penuh dengan tint lembut. Tanpa lirik: satu kolom 410px
+   (sampul 344). Dengan lirik: kolom kiri 352px + lirik 568px, dengan
+   transisi lembut seperti Apple Music.
+   Warna mengikuti tema halaman: kaca gelap saat mode gelap, kaca putih saat
+   mode terang.
    ========================================================================== */
 
 .now-playing {
@@ -976,10 +978,28 @@
   display: flex;
   justify-content: center;
   overflow: hidden;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-inter);
+  /* Token tata letak khusus Now Playing. Token warna sengaja tidak ditimpa
+     di sini supaya mode terang memakai palet terang dari tema halaman. */
+  --np-accent: var(--pink);
+  --np-col: 410px;
+  --np-art: 344px;
+  --np-narrow: 352px;
+  --np-lyrics: 568px;
+  --np-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 0;
+  transition: opacity 340ms var(--ease);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Mode gelap: panel diberi kontras lebih tinggi daripada tema gelap biasa
+   supaya sampul dan teks lebih menonjol. */
+html:not([data-theme="light"]) .now-playing {
   background: #000;
   color: #fff;
-  font-family: var(--font-inter);
-  /* Token tema lokal: tampilan ini selalu gelap agar sampul lebih menonjol. */
   --text: #fff;
   --text-2: rgba(255, 255, 255, 0.74);
   --text-3: rgba(255, 255, 255, 0.52);
@@ -1003,16 +1023,6 @@
   --border-glass-strong: rgba(255, 255, 255, 0.14);
   --shadow-glass: 0 6px 16px rgba(0, 0, 0, 0.16);
   --pill-scrim: rgba(21, 21, 24, 0.95);
-  --np-accent: var(--pink);
-  --np-col: 410px;
-  --np-art: 344px;
-  --np-narrow: 352px;
-  --np-lyrics: 568px;
-  --np-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  opacity: 0;
-  transition: opacity 340ms var(--ease);
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 .now-playing[hidden] {
@@ -1101,7 +1111,7 @@ body.has-now-playing {
 }
 
 .now-playing__head-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--bg-hover);
   border-color: var(--border-glass);
   color: var(--ink);
 }
@@ -1125,7 +1135,7 @@ body.has-now-playing {
 }
 
 .now-playing__head-btn#npLyrics[aria-pressed="true"] {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--bg-hover);
   border-color: var(--border-glass);
   color: var(--ink);
 }
@@ -1219,7 +1229,7 @@ body.has-now-playing {
   margin: 0;
   border-radius: var(--radius-tile);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--bg-input);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
   transform: none;
   transition: width 720ms var(--np-ease);
@@ -1349,7 +1359,7 @@ body.has-now-playing {
 }
 
 .now-playing__like:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--bg-hover);
   border-color: var(--border-glass);
   color: var(--np-accent);
 }
@@ -1386,7 +1396,7 @@ body.has-now-playing {
 }
 
 .now-playing__seek .seek__buffer {
-  background: rgba(255, 255, 255, 0.24);
+  background: var(--np-seek-buffer);
 }
 
 .now-playing__seek .seek__fill {
@@ -1441,7 +1451,7 @@ body.has-now-playing {
 }
 
 .now-playing__ctl:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface-hover);
   color: var(--ink);
   opacity: 1;
 }
