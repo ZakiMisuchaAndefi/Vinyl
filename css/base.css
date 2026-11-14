@@ -128,6 +128,18 @@ html {
   /* Hover di balik kaca: lapisan putih tipis agar tetap terlihat di atas hitam. */
   --surface-hover: rgba(255, 255, 255, 0.07);
 
+  /* Rail volume Now Playing. Panel Now Playing selalu gelap, jadi warna rail
+     ditentukan tema halaman agar di mode terang ikut putih, bukan hitam. */
+  --np-rail-bg: rgba(255, 255, 255, 0.08);
+  --np-rail-bg-hover: rgba(255, 255, 255, 0.12);
+  --np-rail-border: rgba(255, 255, 255, 0.11);
+  --np-rail-track: rgba(255, 255, 255, 0.14);
+  --np-rail-ink: #f6eef1;
+  --np-rail-accent: #f29bbb;
+  --np-rail-shadow: none;
+  --np-rail-opacity: 0.72;
+  --np-rail-thumb-ring: 0 0 0 2px rgba(10, 10, 12, 0.5);
+
   --radius-control: 6px;
   --radius-tile: 10px;
   --radius-bar: 12px;
@@ -216,6 +228,18 @@ html {
   --shadow-glass: 0 6px 16px rgba(0, 0, 0, 0.08);
   --pill-scrim: rgba(255, 255, 255, 0.35);
   --surface-hover: rgba(0, 0, 0, 0.08);
+
+  /* Rail volume Now Playing: di tema terang ikut putih agar tidak tampak
+     sebagai blok gelap di atas panel gelap. */
+  --np-rail-bg: rgba(255, 255, 255, 0.95);
+  --np-rail-bg-hover: #ffffff;
+  --np-rail-border: rgba(0, 0, 0, 0.06);
+  --np-rail-track: rgba(0, 0, 0, 0.14);
+  --np-rail-ink: #1d1d1f;
+  --np-rail-accent: #c92a68;
+  --np-rail-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+  --np-rail-opacity: 1;
+  --np-rail-thumb-ring: 0 0 0 2px rgba(255, 255, 255, 0.9);
 }
 
 html,
