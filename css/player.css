@@ -1528,15 +1528,16 @@ body.has-now-playing {
 .now-playing__volume {
   position: absolute;
   top: 50%;
-  right: clamp(2px, 0.6vw, 10px);
+  /* Sejajar dengan tepi kanan tombol header, tidak menempel ke tepi panel. */
+  right: clamp(16px, 2.2vw, 30px);
   z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  width: 40px;
-  padding: 12px 0;
+  gap: 12px;
+  width: 44px;
+  padding: 14px 0;
   border: 1px solid var(--border-glass);
   border-radius: 999px;
   background: var(--glass-1);
@@ -1585,7 +1586,7 @@ body.has-now-playing {
 }
 
 .now-playing__volume-slider .volume__rail {
-  width: 6px;
+  width: 4px;
   height: 100%;
   background: var(--border-glass-strong);
 }
@@ -1602,11 +1603,11 @@ body.has-now-playing {
   top: auto;
   bottom: var(--pct, 80%);
   left: 50%;
-  width: 12px;
-  height: 12px;
-  margin: 0 0 -6px -6px;
+  width: 10px;
+  height: 10px;
+  margin: 0 0 -5px -5px;
   background: var(--np-accent);
-  box-shadow: 0 0 0 3px rgba(10, 10, 12, 0.45);
+  box-shadow: 0 0 0 2px rgba(10, 10, 12, 0.5);
   opacity: 1;
   transform: none;
 }
@@ -1786,7 +1787,7 @@ body.has-now-playing {
   padding-top: clamp(20px, 9.3vh, 84px);
   padding-left: clamp(0px, 7.4vw, 108px);
   /* Ruang untuk rail volume di tepi kanan panel. */
-  padding-right: 52px;
+  padding-right: 64px;
 }
 
 .now-playing--lyrics .now-playing__main {
@@ -1989,10 +1990,10 @@ body.has-now-playing {
 
   /* Rail volume dipersempit dan ditempel ke tepi panel. */
   .now-playing__volume {
-    right: 2px;
-    width: 34px;
-    gap: 8px;
-    padding: 10px 0;
+    right: 10px;
+    width: 36px;
+    gap: 9px;
+    padding: 11px 0;
   }
 
   .now-playing__volume-slider,
@@ -2245,7 +2246,7 @@ body.has-now-playing {
     align-items: center;
     padding-top: 0;
     /* Lorong untuk rail volume di tepi kanan panel. */
-    padding-right: 48px;
+    padding-right: 64px;
   }
 
   .now-playing:not(.now-playing--lyrics) .now-playing__main {
