@@ -2015,6 +2015,11 @@
 
     function ratioFromEvent(event) {
       const rect = el.getBoundingClientRect();
+      if (el.getAttribute("aria-orientation") === "vertical") {
+        if (!rect.height) return 0;
+        // Rail vertikal: bawah = 0%, atas = 100%.
+        return U.clamp((rect.bottom - event.clientY) / rect.height, 0, 1);
+      }
       if (!rect.width) return 0;
       return U.clamp((event.clientX - rect.left) / rect.width, 0, 1);
     }
