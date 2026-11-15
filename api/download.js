@@ -3,43 +3,60 @@
 
    Browser tidak bisa menyimpan audio YouTube atau FLAC katalog secara
    langsung: berkasnya cross-origin dan sebagian tidak mengirim header CORS.
-   Fungsi ini meneruskan potongan berkas (maksimal 4 MB per respons agar tetap
-   di bawah batas 4,5 MB Vercel) sehingga klien bisa merangkainya menjadi Blob
-   lalu menyimpannya sebagai file.
+   Fungsi ini meneruskan potongan berkas sehingga klien bisa merangkainya
+   menjadi Blob lalu menyimpannya sebagai file.
 
      GET /api/download?track=ID_KATALOG   -> berkas FLAC dari katalog Tracks
-     GET /api/download?video=ID_VIDEO     -> audio YouTube lewat Invidious
+     GET /api/download?video=ID_VIDEO&quality=best -> audio YouTube (InnerTube)
+
+   Audio YouTube diselesaikan dengan klien visionOS yang sama seperti
+   /api/stream, lalu diambil langsung dari Google Video. Google Video menolak
+   byte-range di atas ~1 MB untuk URL InnerTube, jadi potongannya 1 MB. FLAC
+   diambil dari katalog Tracks dengan potongan 4 MB (batas respons Vercel
+   4,5 MB).
    ========================================================================== */
 
 const lossless = require("./_lossless");
-const invidious = require("./_invidious");
+const lib = require("./_lib");
 
-// Batas Vercel untuk satu respons adalah 4,5 MB; sisakan ruang untuk header.
-const CHUNK = 4 * 1024 * 1024;
+const FLAC_CHUNK = 4 * 1024 * 1024;
+const YOUTUBE_CHUNK = 1024 * 1024;
 const TIMEOUT = 50000;
-const UA =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
-const AAC_ITAGS = new Set([139, 140, 141]);
-const OPUS_ITAGS = new Set([249, 250, 251, 774]);
-const DEFAULT_ITAG = 251;
+const AAC_TYPE = /audio\/(mp4|m4a|aac)/i;
 
-function requestedRange(header) {
-  const match = /^bytes=(\d*)-(\d*)$/.exec(String(header || "").trim());
-  if (!match || (match[1] === "" && match[2] === "")) {
-    return { header: "bytes=0-" + (CHUNK - 1), start: 0 };
+// Ikuti redirect Google Video, tapi tolak kalau keluar dari domain yang aman.
+async function fetchAllowed(target, range, headers) {
+  let current = target;
+  let redirects = 0;
+  while (true) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT);
+    let response;
+    try {
+      response = await fetch(current, {
+        method: "GET",
+        signal: controller.signal,
+        redirect: "manual",
+        headers: Object.assign({ Range: range }, headers || {})
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      await response.body?.cancel();
+      if (!location) return response;
+      if (redirects >= 5) throw new Error("Terlalu banyak redirect saat mengambil audio");
+      current = new URL(location, current).toString();
+      if (!lib.isAllowed(current)) throw new Error("URL redirect tidak valid");
+      redirects += 1;
+      continue;
+    }
+
+    return response;
   }
-  if (match[1] === "") {
-    // Rentang sufiks: cukup ambil beberapa byte terakhir, tidak lebih dari CHUNK.
-    const length = Math.min(Math.max(1, Number(match[2]) || CHUNK), CHUNK);
-    return { header: "bytes=-" + length, start: null };
-  }
-  const start = Number(match[1]);
-  const end =
-    match[2] === ""
-      ? start + CHUNK - 1
-      : Math.min(Number(match[2]), start + CHUNK - 1);
-  return { header: "bytes=" + start + "-" + end, start };
 }
 
 // Baca isi respons sampai `limit` byte. Kalau upstream mengabaikan Range dan
@@ -81,36 +98,36 @@ async function readBody(response, skip, limit) {
   return Buffer.concat(parts);
 }
 
-function contentRangeOf(upstream, range, bytes) {
+function contentRangeOf(upstream, start, bytes, total) {
   const header = String(upstream.headers.get("content-range") || "");
   const match = /^bytes\s+(\d+)-(\d+)\/(\d+|\*)$/i.exec(header);
   if (match) {
-    const start = Number(match[1]);
-    const total = match[3] === "*" ? 0 : Number(match[3]);
-    const end = Math.min(
-      start + bytes.length - 1,
-      total > 0 ? total - 1 : Number.MAX_SAFE_INTEGER
-    );
-    return "bytes " + start + "-" + end + "/" + (total > 0 ? total : "*");
+    const from = Number(match[1]);
+    const known = match[3] === "*" ? 0 : Number(match[3]);
+    const to = from + bytes.length - 1;
+    return "bytes " + from + "-" + to + "/" + (known > 0 ? known : "*");
   }
-  if (range.start === null || !bytes.length) return "";
-  const length = Number(upstream.headers.get("content-length")) || 0;
-  const total = upstream.status === 200 && length > 0 ? range.start + length : 0;
-  return total > 0
-    ? "bytes " + range.start + "-" + (range.start + bytes.length - 1) + "/" + total
+  if (start === null || !bytes.length) return "";
+  const guess = total || 0;
+  return guess > 0
+    ? "bytes " + start + "-" + (start + bytes.length - 1) + "/" + guess
     : "";
 }
 
-function contentTypeFor(track, itag) {
-  if (track) return "audio/flac";
-  if (AAC_ITAGS.has(itag)) return "audio/mp4";
-  if (OPUS_ITAGS.has(itag)) return "audio/webm";
-  return "application/octet-stream";
+function sanitizeName(value) {
+  return (
+    String(value || "")
+      .normalize("NFKD")
+      .replace(/[\\/:*?"<>|\u0000-\u001F]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 120) || "vinyl-audio"
+  );
 }
 
-function extensionFor(track, itag) {
-  if (track) return ".flac";
-  if (AAC_ITAGS.has(itag)) return ".m4a";
+function extensionFor(type, flac) {
+  if (flac) return ".flac";
+  if (AAC_TYPE.test(String(type || ""))) return ".m4a";
   return ".webm";
 }
 
@@ -125,65 +142,100 @@ module.exports = async (req, res) => {
   }
 
   let target = "";
-  let itag = 0;
+  let headers = {};
+  let chunk = YOUTUBE_CHUNK;
+  let type = "";
+  let total = 0;
+  const flac = !!track;
+
   if (track) {
     if (!/^\d{1,30}$/.test(track)) {
       return res.status(400).json({ error: "ID lagu lossless tidak valid." });
     }
     target = lossless.BASE + "/track/" + encodeURIComponent(track);
+    headers = {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      Accept: "*/*"
+    };
+    chunk = FLAC_CHUNK;
+    type = "audio/flac";
   } else {
     if (!/^[A-Za-z0-9_-]{11}$/.test(video)) {
       return res.status(400).json({ error: "ID video tidak valid." });
     }
-    const requested = Number(req.query.itag) || DEFAULT_ITAG;
-    itag = AAC_ITAGS.has(requested) || OPUS_ITAGS.has(requested) ? requested : DEFAULT_ITAG;
-    const host = await invidious.pick();
-    if (!host) {
-      return res.status(503).json({ error: "Layanan audio tidak tersedia saat ini." });
+    const quality = lib.qualityOf(req.query.quality);
+    let entry;
+    try {
+      entry = await lib.getAudioUrl(video, quality, false);
+    } catch (error) {
+      console.error("[download] gagal menyiapkan audio YouTube:", error);
+      return res.status(502).json({ error: "Layanan audio tidak tersedia saat ini." });
     }
-    target = invidious.audioUrl(host, video, itag);
+    const format = (entry && entry.format) || {};
+    target = entry.url;
+    headers = entry.headers || {};
+    chunk = YOUTUBE_CHUNK;
+    type = String(format.mimeType || "").split(";")[0].trim() || "audio/webm";
+    total =
+      Number(new URL(target).searchParams.get("clen")) ||
+      Number(format.contentLength) ||
+      0;
   }
 
-  const range = requestedRange(req.headers.range);
-  const limit =
-    range.start === null
-      ? CHUNK
-      : Math.min(CHUNK, Number(range.header.split("-")[1]) - range.start + 1);
+  // Rentang yang diminta klien, dipotong agar tidak melewati batas upstream.
+  const match = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range || "").trim());
+  let start = 0;
+  let end = chunk - 1;
+  let suffix = null;
+  if (match && match[1] === "" && match[2] !== "") {
+    suffix = Math.min(Math.max(1, Number(match[2]) || chunk), chunk);
+  } else if (match && match[1] !== "") {
+    start = Math.max(0, Number(match[1]) || 0);
+    const asked = match[2] === "" ? Infinity : Number(match[2]);
+    end = Math.min(start + chunk - 1, asked);
+    if (total > 0 && start >= total) {
+      res.statusCode = 416;
+      res.setHeader("Content-Range", "bytes */" + total);
+      res.setHeader("Accept-Ranges", "bytes");
+      return res.end();
+    }
+    if (total > 0) end = Math.min(end, total - 1);
+  }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT);
+  const rangeHeader =
+    suffix !== null ? "bytes=-" + suffix : "bytes=" + start + "-" + end;
+  const limit = suffix !== null ? suffix : end - start + 1;
+
+  let upstream;
   try {
-    const upstream = await fetch(target, {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: {
-        Range: range.header,
-        "User-Agent": UA,
-        Accept: "*/*"
-      }
-    });
-
+    upstream = await fetchAllowed(target, rangeHeader, headers);
     if (!upstream.ok && upstream.status !== 206) {
       console.error("[download] upstream menolak:", upstream.status, target);
       await upstream.body?.cancel();
       return res.status(502).json({ error: "Berkas audio tidak dapat diambil saat ini." });
     }
 
-    const skip = upstream.status === 200 && range.start ? range.start : 0;
+    const skip = upstream.status === 200 && suffix === null ? start : 0;
     const bytes = await readBody(upstream, skip, limit);
     if (!bytes.length) {
       return res.status(502).json({ error: "Berkas audio kosong." });
     }
 
-    const contentRange = contentRangeOf(upstream, range, bytes);
+    const contentRange = contentRangeOf(
+      upstream,
+      suffix === null ? start : null,
+      bytes,
+      total
+    );
     res.statusCode = contentRange ? 206 : 200;
-    res.setHeader("Content-Type", contentTypeFor(track, itag));
+    res.setHeader("Content-Type", type);
     res.setHeader("Content-Length", String(bytes.length));
     if (contentRange) res.setHeader("Content-Range", contentRange);
     res.setHeader("Accept-Ranges", "bytes");
     res.setHeader(
       "Content-Disposition",
-      'attachment; filename="vinyl-audio' + extensionFor(track, itag) + '"'
+      'attachment; filename="' + sanitizeName("vinyl-audio") + extensionFor(type, flac) + '"'
     );
 
     if (req.method === "HEAD") return res.end();
@@ -193,7 +245,5 @@ module.exports = async (req, res) => {
     if (!res.headersSent) {
       res.status(502).json({ error: "Berkas audio tidak dapat diambil saat ini." });
     }
-  } finally {
-    clearTimeout(timer);
   }
 };
