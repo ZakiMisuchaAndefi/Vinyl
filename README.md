@@ -2,7 +2,7 @@
 
 Pemutar musik bergaya Apple Music yang dibuat dengan HTML, CSS, dan JavaScript murni. Koleksi lokal tetap berada di perangkatmu — tidak ada server cloud, tidak ada unggahan, dan tidak ada akun. Kamu juga bisa memutar musik langsung dari internet tanpa mengimpor file.
 
-Tema gelap dan terang dengan aksen merah khas Apple Music, lengkap dengan sampul prosedural untuk lagu tanpa artwork.
+Tema gelap dan terang dengan palet Vinyl (pink, icy, dan ink), lengkap dengan sampul prosedural untuk lagu tanpa artwork.
 
 ## Fitur
 

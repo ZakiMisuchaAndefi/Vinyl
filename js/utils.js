@@ -198,23 +198,21 @@
      Artwork generatif
      ------------------------------------------------------------------------ */
 
+  /* Pasangan warna sampul prosedural dari palet Vinyl: pink -> icy atau
+     sebaliknya di atas dasar ink gelap, supaya teks putih tetap terbaca. */
   const PALETTES = [
-    ["#ff375f", "#ff9f0a", "#ffd60a"],
-    ["#5e5ce6", "#bf5af2", "#ff375f"],
-    ["#0a84ff", "#64d2ff", "#5e5ce6"],
-    ["#30d158", "#66d4cf", "#0a84ff"],
-    ["#ff9f0a", "#ff375f", "#bf5af2"],
-    ["#64d2ff", "#5e5ce6", "#1c1c1e"],
-    ["#ffd60a", "#30d158", "#0a84ff"],
-    ["#bf5af2", "#0a84ff", "#30d158"],
-    ["#ff375f", "#bf5af2", "#0a84ff"],
-    ["#ac8e68", "#ffd60a", "#ff375f"],
-    ["#1d1d1f", "#5e5ce6", "#ff375f"],
-    ["#66d4cf", "#30d158", "#0a84ff"],
-    ["#ff6b6b", "#ffd93d", "#6bcB77"],
-    ["#845ec2", "#d65db1", "#ff6f91"],
-    ["#0081cf", "#00c9a7", "#f9f871"],
-    ["#f83600", "#f9d423", "#ff4e50"]
+    ["#c92a68", "#2f6f9e", "#f29bbb"],
+    ["#2f6f9e", "#17121a", "#a9d3f0"],
+    ["#17121a", "#c92a68", "#f29bbb"],
+    ["#a81f55", "#c92a68", "#f29bbb"],
+    ["#2f6f9e", "#17121a", "#c92a68"],
+    ["#17121a", "#2f6f9e", "#a9d3f0"],
+    ["#c92a68", "#17121a", "#a9d3f0"],
+    ["#17121a", "#a81f55", "#f29bbb"],
+    ["#2f6f9e", "#c92a68", "#a9d3f0"],
+    ["#c92a68", "#2f6f9e", "#a9d3f0"],
+    ["#a81f55", "#2f6f9e", "#f29bbb"],
+    ["#17121a", "#2f6f9e", "#c92a68"]
   ];
 
   function paletteFor(seed) {

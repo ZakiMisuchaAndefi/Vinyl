@@ -362,7 +362,7 @@
     const value = theme === "light" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", value);
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", value === "light" ? "#ffffff" : "#000000");
+    if (meta) meta.setAttribute("content", value === "light" ? "#f4f4f7" : "#000000");
     if (els.themeToggle) {
       U.setIconIn(els.themeToggle, value === "light" ? "sun" : "moon");
       const label = value === "light" ? "Ganti ke tema gelap" : "Ganti ke tema terang";
