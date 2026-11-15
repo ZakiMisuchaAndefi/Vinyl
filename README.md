@@ -19,6 +19,7 @@ Perpustakaan pribadi tetap ada sebagai pelengkap: impor MP3, M4A, FLAC, WAV, OGG
 - **Pencarian langsung** — satu kotak mencari perpustakaan dan YouTube sekaligus, dengan halaman berikutnya lewat **Muat lebih banyak**.
 - **Suka lintas sumber** — lagu streaming dan lagu lokal bisa ditandai hati dan tetap ada setelah muat ulang.
 - **Lirik sinkron + romanisasi** — lirik LRC bergaya Apple Music, baris aktif membesar dan terang; aksara non-Latin otomatis diberi transliterasi lokal.
+- **Unduhan di browser** — simpan lagu sebagai **FLAC lossless** atau audio sumber YouTube (`.webm`/`.m4a`) langsung dari web, tanpa server lokal dan tanpa `ffmpeg`.
 - **Timer tidur** — hentikan pemutaran setelah 5, 10, 15, 30, 45, atau 60 menit, atau di akhir lagu; volume menurun perlahan sebelum jeda.
 
 **Perpustakaan pribadi (opsional)**
@@ -30,7 +31,6 @@ Perpustakaan pribadi tetap ada sebagai pelengkap: impor MP3, M4A, FLAC, WAV, OGG
 - **Lanjut setelah muat ulang** — lagu, posisi, antrean, volume, acak, dan mode ulangi dipulihkan saat halaman dibuka lagi; pemutaran dimulai dalam keadaan jeda.
 - **Riwayat pemutaran** — lagu yang diputar minimal 30 detik (atau selesai jika lebih pendek) masuk ke halaman **Riwayat**, terbaru di atas.
 - **Impor ke playlist** — impor file langsung dari halaman playlist; lagu baru masuk ke perpustakaan dan playlist sekaligus.
-- **Unduhan MP3** — simpan lagu YouTube sebagai `.mp3` dengan metadata judul, artis, album, dan sampul tertanam. Membutuhkan `ffmpeg.exe` dan hanya tersedia di versi lokal.
 
 **Antarmuka & lain-lain**
 
@@ -49,13 +49,11 @@ Perpustakaan pribadi tetap ada sebagai pelengkap: impor MP3, M4A, FLAC, WAV, OGG
 
 ### Langsung di browser (disarankan)
 
-Buka **[vinyl.my.id](https://vinyl.my.id)**. Tidak ada yang perlu dipasang: pencarian, radio, dan streaming audio berjalan lewat fungsi serverless di Vercel. Versi online sudah mencakup FLAC lossless, lirik, radio otomatis, dan perpustakaan pribadi di penyimpanan browser.
-
-Satu-satunya fitur yang tidak tersedia di versi online adalah **unduhan MP3**, karena `ffmpeg` tidak ikut terpasang di Vercel. Untuk itu, jalankan versi lokal.
+Buka **[vinyl.my.id](https://vinyl.my.id)**. Tidak ada yang perlu dipasang: pencarian, radio, streaming audio, dan unduhan berjalan lewat fungsi serverless di Vercel. Versi online sudah mencakup FLAC lossless, unduhan FLAC, lirik, radio otomatis, dan perpustakaan pribadi di penyimpanan browser.
 
 ### Jalankan lokal (opsional)
 
-Versi lokal berguna untuk mengunduh MP3, mengembangkan proyek, atau memakai proxy audio sendiri. Butuh **Node.js** dan PowerShell di Windows.
+Versi lokal berguna untuk mengembangkan proyek atau memakai proxy audio sendiri. Butuh **Node.js** dan PowerShell di Windows. Unduhan tetap berjalan di browser; `ffmpeg` tidak diperlukan.
 
 ```powershell
 cd "C:\path\ke\vinyl"
@@ -75,7 +73,7 @@ Repo ini juga siap di-deploy ke **Vercel** tanpa build step:
 3. Pencarian, beranda, dan radio langsung berjalan lewat fungsi serverless. Pemutaran audio YouTube memakai **instance Invidious** sebagai sumber audio: YouTube menolak permintaan audio dari IP datacenter Vercel, jadi `api/health` memeriksa instance yang tersedia dan browser memutar audionya langsung. Hasilnya tanpa iklan, durasi penuh, dan video yang melarang embed tetap bisa diputar. Jika instance sedang mati, aplikasi otomatis memakai pemutar resmi YouTube sebagai cadangan.
 4. Aktifkan **Web Analytics** dari dashboard proyek Vercel, lalu deploy ulang. Script Analytics sudah terpasang dan navigasi aplikasi ikut dicatat; query pencarian dan ID detail tidak dikirim sebagai path.
 
-> Di Vercel, `ffmpeg` tidak ikut terpasang sehingga tombol unduhan MP3 nonaktif. Untuk unduhan MP3, jalankan versi lokal dengan `ffmpeg.exe`.
+> Di Vercel, unduhan memakai `api/download`: proxy potongan 4 MB yang meneruskan audio YouTube (via Invidious) atau berkas FLAC dari katalog Tracks. Tidak ada `ffmpeg` yang dibutuhkan.
 
 > **Penting:** di versi lokal, jalankan lewat server agar IndexedDB aktif dan koleksi tersimpan permanen. Membuka `index.html` langsung lewat `file://` masih bisa dipakai, tetapi browser dapat menonaktifkan penyimpanan sehingga koleksi hanya bertahan selama tab terbuka.
 
@@ -91,11 +89,12 @@ Repo ini juga siap di-deploy ke **Vercel** tanpa build step:
 | `GET /api/stream?id=VIDEO_ID&quality=high` | Menyajikan audio lewat byte-range agar player aplikasi bisa memutar dan seek; `force=1` mengambil URL baru saat mencoba ulang. Dipakai saat aplikasi berjalan lokal. |
 | `GET /api/lossless?title=...&artist=...&duration=...` | Mencari versi FLAC di katalog **Tracks** (monochrome.st) dan mengembalikan URL audio + detail format (sample rate, kanal, bit depth, bitrate). `404` berarti lagu tidak tersedia dalam FLAC. |
 | `GET /api/radio?id=VIDEO_ID` | Daftar lagu radio YouTube untuk lagu terkait. |
-| `GET /api/download?id=VIDEO_ID&quality=best&title=...` | Memulai job unduhan latar; mengembalikan `jobId`. |
+| `GET /api/download?track=ID_KATALOG` + `Range` | Potongan berkas FLAC dari katalog Tracks (maksimal 4 MB per respons). Dipakai tombol unduhan. |
+| `GET /api/download?id=VIDEO_ID&quality=best&title=...` | Job MP3 lama (opsional, butuh `ffmpeg`); tidak dipakai lagi oleh antarmuka unduhan. |
 | `GET /api/download-status?job=JOB_ID` | Status job: `running`, `done`, atau `error`. |
 | `GET /api/download-file?job=JOB_ID` | Mengirim file hasil unduhan sebagai lampiran. |
 
-Saat di-deploy ke **Vercel**, endpoint yang sama dilayani fungsi Node di folder `api/` (tanpa server yang perlu menyala). Pencarian dan radio memakai InnerTube di fungsi serverless; audio YouTube diputar dari instance Invidious lewat browser. Pencarian FLAC memakai endpoint `/api/lossless` di serverless, lalu audio lossless diputar langsung dari katalog Tracks (mendukung Range, tanpa proxy).
+Saat di-deploy ke **Vercel**, endpoint yang sama dilayani fungsi Node di folder `api/` (tanpa server yang perlu menyala). Pencarian dan radio memakai InnerTube di fungsi serverless; audio YouTube diputar dari instance Invidious lewat browser. Pencarian FLAC memakai endpoint `/api/lossless` di serverless, lalu audio lossless diputar langsung dari katalog Tracks (mendukung Range, tanpa proxy). Untuk unduhan, `/api/download` meneruskan potongan 4 MB dari audio YouTube (via Invidious) atau berkas FLAC katalog; potongan itu dirangkai browser menjadi file utuh.
 
 ## Beranda streaming
 
@@ -149,7 +148,7 @@ Tidak perlu API key, akun, atau impor file. Cukup buka **Pencarian** dan ketik k
 
 ### Cara memakai YouTube
 
-1. Buka **[vinyl.my.id](https://vinyl.my.id)** — tidak perlu memasang apa pun. Untuk pengembangan atau unduhan MP3, jalankan versi lokal lewat `server.ps1` (butuh Node.js).
+1. Buka **[vinyl.my.id](https://vinyl.my.id)** — tidak perlu memasang apa pun. Untuk pengembangan atau proxy audio sendiri, jalankan versi lokal lewat `server.ps1` (butuh Node.js).
 2. Buka **Pencarian**, lalu ketik judul lagu atau nama artis — atau tempel tautan video langsung. Bagian **Dari YouTube** muncul otomatis di bawah hasil perpustakaan.
 3. Hasil pencarian bisa diputar lewat **Putar semua** atau **Acak**; satu video dari tautan langsung diputar sendiri.
 4. Kendalikan dari bar pemutar aplikasi seperti biasa — putar/jeda, geser posisi, volume, antrean, acak, dan ulangi tetap berfungsi. Lagu YouTube tampil seperti lagu lain karena yang diputar hanya audionya.
@@ -170,15 +169,14 @@ Catatan:
 - Halaman **Suka** memisahkan dua bagian: **Dari perpustakaan** (favorit file lokal) dan **Dari YouTube** (lagu yang disukai dari internet). Tombol **Putar** dan **Acak** memutar keduanya dalam satu antrean.
 - Menghapus hati pada lagu YouTube akan menghapusnya dari halaman **Suka**. Ini tidak memengaruhi file lokal atau playlist.
 
-### Unduhan MP3
+### Unduhan
 
 - Tekan tombol unduh di bar pemutar saat lagu YouTube diputar, atau pilih **Unduh audio** dari menu `⋯` pada baris lagu online.
-- Hasil unduhan selalu berupa **`.mp3`**, dengan tag judul, artis, album, dan sampul tertanam.
-- Kualitas unduhan mengikuti **Pengaturan → Audio → Kualitas unduhan**: **Hemat** (hingga 96 kbps), **Standar** (hingga 128 kbps), **Tinggi** (hingga 192 kbps), dan **Terbaik** (VBR terbaik yang didukung sumber).
-- **`ffmpeg.exe` wajib ada** untuk konversi MP3. Letakkan di folder aplikasi, di `tools\ffmpeg\bin\ffmpeg.exe`, atau di `PATH`, lalu jalankan ulang server. Tanpa FFmpeg, tombol unduh menampilkan pesan yang jelas dan `/api/health` melaporkan `mp3: false`.
-- Server menjalankan resolver sebagai proses latar sehingga pemutaran tidak terhenti saat mengunduh. Setelah selesai, browser otomatis menawarkan file; jika tidak muncul, tekan **Simpan** pada notifikasi.
-- File disimpan di folder **`downloads/`** di folder aplikasi dan dinamai `Judul [ID].mp3`. Server membersihkan file unduhan yang lebih lama dari 7 hari dan mengabaikan file `.webm` lama.
-- **Unduhan selalu MP3**, bukan FLAC. Untuk streaming lossless, pilih format **FLAC** di Pengaturan (lihat bagian Format streaming).
+- **Pengaturan → Audio → Kualitas unduhan** menentukan hasilnya: **FLAC** (lossless dari katalog Tracks), **Hemat/Standar/Tinggi**, atau **Terbaik** (audio sumber YouTube).
+- Berkas diambil lewat `/api/download` dalam potongan 4 MB, dirangkai browser, lalu disimpan langsung ke folder Unduhan. Tidak perlu `ffmpeg`, folder `downloads/`, atau server lokal.
+- FLAC diunduh sebagai `.flac`; bila lagunya tidak ada di katalog, Vinyl otomatis mengunduh audio terbaik YouTube dan memberi tahu lewat notifikasi.
+- Audio YouTube disimpan sebagai `.webm` (OPUS) atau `.m4a` (AAC) sesuai format sumber, dengan nama `Artis - Judul`.
+- Ukuran FLAC jauh lebih besar daripada audio YouTube (sekitar 20–40 MB per lagu). Di versi lokal, unduhan memakai proxy audio `server.ps1`; di web, proxy Vercel.
 
 ### Format streaming
 
@@ -240,8 +238,9 @@ Pemutaran Spotify penuh juga memerlukan akun **Spotify Premium**, OAuth, dan Spo
 - Kapasitas bergantung pada kuota browser (biasanya beberapa GB). Pengaturan menampilkan perkiraan pemakaian.
 - Semua file lokal tetap di perangkat ini dan tidak pernah diunggah ke internet.
 - Saat memakai pencarian YouTube, kata kunci pencarian atau tautan yang kamu tempel dan metadata video dikirim ke YouTube (via InnerTube dan oEmbed). Di Vercel, audio diputar dari instance Invidious sehingga instance itu dan YouTube menerima koneksi langsung dari perangkatmu. Tidak ada data perpustakaan lokal yang ikut dikirim.
-- **Daftar Suka dari YouTube** disimpan di `localStorage` browser. **File hasil unduhan** disimpan sebagai file biasa di folder `downloads/` dan tidak diunggah ke mana pun.
-- **Pengaturan → Hapus semua data** menghapus lagu, sampul, playlist, dan favorit lokal dari aplikasi. File asli di folder musikmu dan file di folder `downloads/` tidak terhapus.
+- **Unduhan** diambil lewat `/api/download` (potongan 4 MB) agar berkas bisa dirangkai dan disimpan browser; fungsi itu tidak menyimpan salinan audio setelah respons selesai.
+- **Daftar Suka dari YouTube** disimpan di `localStorage` browser. **File hasil unduhan** disimpan oleh browser ke folder Unduhan perangkatmu dan tidak diunggah ke mana pun.
+- **Pengaturan → Hapus semua data** menghapus lagu, sampul, playlist, dan favorit lokal dari aplikasi. File asli di folder musikmu dan file hasil unduhan di folder Unduhan tidak terhapus.
 - Menghapus data situs di browser juga akan menghapus koleksi Vinyl, antrean, pengaturan, dan daftar Suka dari YouTube.
 
 ## Pintasan keyboard
@@ -267,18 +266,19 @@ Pintasan selain `Esc` tidak aktif saat kamu sedang mengetik di kolom input.
 .
 ├── index.html
 ├── package.json
-├── server.ps1          # server lokal opsional (endpoint audio, unduhan MP3)
+├── server.ps1          # server lokal opsional (proxy audio + FLAC)
 ├── README.md
 ├── vercel.json         # konfigurasi deploy serverless
-├── downloads/          # hasil unduhan MP3 YouTube (dibuat otomatis)
 ├── api/                # fungsi serverless Vercel (Node)
 │   ├── _innertube.js   # klien InnerTube untuk pencarian
 │   ├── search.js       # GET /api/search
 │   ├── _lib.js         # resolver audio InnerTube dan helper radio
+│   ├── _invidious.js   # pemilih instance Invidious untuk audio & unduhan
 │   ├── _lossless.js    # pencarian + pembacaan header FLAC (Tracks)
 │   ├── lossless.js     # GET /api/lossless
 │   ├── resolve.js      # GET /api/resolve
 │   ├── stream.js       # GET /api/stream
+│   ├── download.js     # GET /api/download (potongan audio/FLAC)
 │   ├── radio.js        # GET /api/radio
 │   └── health.js       # GET /api/health (pilih mesin audio)
 ├── scripts/            # CLI bantu untuk mencoba InnerTube dan katalog FLAC
@@ -303,7 +303,7 @@ Pintasan selain `Esc` tidak aktif saat kamu sedang mengetik di kolom input.
     ├── youtube.js      # pencarian InnerTube + URL audio (proxy/Invidious/IFrame)
     ├── lossless.js     # pencarian FLAC (Tracks) saat format streaming = FLAC
     ├── lyrics.js       # pencarian lirik LRCLIB saat lirik tidak tertanam
-    ├── downloads.js    # unduhan MP3 YouTube lewat job server
+    ├── downloads.js    # unduhan browser: FLAC lossless + audio YouTube
     ├── home.js         # feed streaming untuk beranda
     ├── library.js      # state perpustakaan, impor, playlist, riwayat
     ├── media.js        # jembatan <audio> + pemutar YouTube IFrame
@@ -329,7 +329,7 @@ Pintasan selain `Esc` tidak aktif saat kamu sedang mengetik di kolom input.
 
 ## Kompatibilitas
 
-Vinyl berjalan di browser modern — Chrome, Edge, Safari, dan Firefox — yang mendukung elemen `<audio>`, IndexedDB, dan File API. Versi online tidak memerlukan pemasangan apa pun, hanya koneksi internet. Versi lokal (opsional) berjalan di Windows dengan PowerShell dan Node.js; `ffmpeg.exe` hanya dibutuhkan untuk unduhan MP3. Tampilan memakai font sistem.
+Vinyl berjalan di browser modern — Chrome, Edge, Safari, dan Firefox — yang mendukung elemen `<audio>`, IndexedDB, File API, dan Blob. Versi online tidak memerlukan pemasangan apa pun, hanya koneksi internet. Unduhan FLAC maupun audio YouTube berjalan langsung di browser tanpa `ffmpeg`. Versi lokal (opsional) berjalan di Windows dengan PowerShell dan Node.js. Tampilan memakai font sistem.
 
 ## Lisensi
 

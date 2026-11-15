@@ -9,7 +9,8 @@
 #   GET /api/resolve?id=VIDEO_ID&quality=high -> { "url": "...", "expires": <unix> }
 #   GET /api/lossless?title=...&artist=...   -> URL FLAC + detail format (katalog Tracks)
 #   GET /api/radio?id=VIDEO_ID   -> { "tracks": [ { id, title, artist, duration } ] }
-#   GET /api/download?id=VIDEO_ID&quality=high&title=... -> { "jobId": "...", "status": "running" }
+#   GET /api/download?track=ID&Range: bytes=0-...  -> potongan berkas FLAC (maks 4 MB)
+#   GET /api/download?id=VIDEO_ID&quality=high&title=... -> job MP3 lama (opsional)
 #   GET /api/download-status?job=JOB_ID -> { "status": "running|done|error", ... }
 #   GET /api/download-file?job=JOB_ID   -> file audio (attachment)
 # ==========================================================================
@@ -664,8 +665,78 @@ function Send-DownloadFile($stream, $filePath, $downloadName, $headOnly) {
   $stream.Flush()
 }
 
+# Proxy potongan berkas FLAC dari katalog Tracks (maksimal 4 MB per respons,
+# sama seperti api/download.js di Vercel).
+function Send-CatalogFile($stream, $trackId, $clientRange, $headOnly) {
+  $maxBytes = 4 * 1024 * 1024
+  $start = 0L
+  $end = [int64]($maxBytes - 1)
+  if ($clientRange -match '^bytes=(\d*)-(\d*)$' -and $Matches[1] -ne "") {
+    $start = [int64]$Matches[1]
+    if ($Matches[2] -ne "") { $end = [int64]$Matches[2] }
+    else { $end = $start + $maxBytes - 1 }
+    if ($end -lt $start) { throw "Rentang audio tidak valid" }
+    if (($end - $start + 1) -gt $maxBytes) { $end = $start + $maxBytes - 1 }
+  }
+
+  $url = "https://tracks.monochrome.st/track/" + $trackId
+  $request = [System.Net.HttpWebRequest]::Create($url)
+  $request.Method = "GET"
+  $request.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+  $request.Accept = "*/*"
+  $request.Timeout = 30000
+  $request.ReadWriteTimeout = 30000
+  $request.AddRange("bytes", [int64]$start, [int64]$end)
+
+  $response = $request.GetResponse()
+  try {
+    $upstream = $response.GetResponseStream()
+    $memory = New-Object System.IO.MemoryStream
+    $buffer = New-Object byte[] 65536
+    $read = 0L
+    $limit = [int64]($end - $start + 1)
+    while ($read -lt $limit) {
+      $want = [Math]::Min([int64]$buffer.Length, $limit - $read)
+      $got = $upstream.Read($buffer, 0, [int]$want)
+      if ($got -le 0) { break }
+      $memory.Write($buffer, 0, $got)
+      $read += $got
+    }
+    $bytes = $memory.ToArray()
+    $memory.Dispose()
+
+    $contentRange = [string]$response.Headers["Content-Range"]
+    if ($contentRange -match '^bytes\s+(\d+)-(\d+)\/(\d+|\*)$') {
+      $rangeStart = [int64]$Matches[1]
+      $rangeEnd = [int64]($rangeStart + $bytes.Length - 1)
+      if ($bytes.Length -eq 0) { $rangeEnd = $rangeStart }
+      $contentRange = "bytes $rangeStart-$rangeEnd/$($Matches[3])"
+    }
+    $status = if ([string]::IsNullOrEmpty($contentRange)) { 200 } else { 206 }
+    $reason = if ($status -eq 206) { "Partial Content" } else { "OK" }
+    $header = "HTTP/1.1 $status $reason`r`n" +
+      "Content-Type: audio/flac`r`n" +
+      "Content-Length: $($bytes.Length)`r`n" +
+      "Accept-Ranges: bytes`r`n" +
+      $(if ($contentRange) { "Content-Range: $contentRange`r`n" } else { "" }) +
+      "Content-Disposition: attachment; filename=`"vinyl-audio.flac`"`r`n" +
+      "Cache-Control: no-store`r`n" +
+      "X-Content-Type-Options: nosniff`r`n" +
+      "Connection: close`r`n`r`n"
+    $headerBytes = [System.Text.Encoding]::ASCII.GetBytes($header)
+    $stream.Write($headerBytes, 0, $headerBytes.Length)
+    if (-not $headOnly -and $bytes.Length -gt 0) {
+      $stream.Write($bytes, 0, $bytes.Length)
+    }
+    $stream.Flush()
+  } finally {
+    $response.Close()
+  }
+}
+
+
 Write-Host ""
-Write-Host "  Musik - server lokal" -ForegroundColor Red
+Write-Host "  Vinyl - server lokal" -ForegroundColor Red
 Write-Host "  http://127.0.0.1:$Port/" -ForegroundColor White
 if (Test-InnerTubeResolver) {
   Write-Host "  Audio resolver: InnerTube (Node) siap" -ForegroundColor Green
@@ -673,12 +744,11 @@ if (Test-InnerTubeResolver) {
   Write-Host "  Audio resolver: Node.js/scripts/innertube-cli.js tidak ditemukan (lagu YouTube nonaktif)" -ForegroundColor Yellow
 }
 if (-not [string]::IsNullOrEmpty($script:ffmpegPath)) {
-  Write-Host "  ffmpeg: siap (unduhan MP3 + metadata aktif)" -ForegroundColor Green
-} else {
-  Write-Host "  ffmpeg: tidak ditemukan (unduhan MP3 nonaktif)" -ForegroundColor DarkGray
+  Write-Host "  ffmpeg: terdeteksi (endpoint MP3 lama tetap aktif)" -ForegroundColor DarkGray
 }
-Write-Host "  Folder unduhan: $script:downloadDir" -ForegroundColor DarkGray
+Write-Host "  Unduhan: proxy FLAC + audio ber-Range untuk browser" -ForegroundColor DarkGray
 Write-Host "  Tekan Ctrl+C untuk berhenti." -ForegroundColor DarkGray
+Write-Host ""
 Write-Host ""
 
 try {
@@ -893,6 +963,20 @@ try {
               Send-Json $stream 503 "Service Unavailable" @{ error = $result.Error } $false
             } else {
               Send-Json $stream 502 "Bad Gateway" @{ error = $result.Error } $false
+            }
+          }
+        }
+      } elseif ($path -eq "/api/download" -and ($method -eq "GET" -or $headOnly) -and (Get-QueryValue $rawQuery "track")) {
+        $trackId = Get-QueryValue $rawQuery "track"
+        if ($trackId -notmatch '^\d{1,30}$') {
+          Send-Json $stream 400 "Bad Request" @{ error = "ID lagu lossless tidak valid." } $headOnly
+        } else {
+          try {
+            Send-CatalogFile $stream $trackId $clientRange $headOnly
+          } catch {
+            Write-Host "[download] gagal meneruskan FLAC: $($_.Exception.Message)" -ForegroundColor Yellow
+            if (-not $headOnly) {
+              Send-Json $stream 502 "Bad Gateway" @{ error = "Berkas audio tidak dapat diambil saat ini." } $false
             }
           }
         }
