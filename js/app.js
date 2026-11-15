@@ -55,10 +55,11 @@
   ];
 
   const DOWNLOAD_QUALITIES = [
-    { id: "low", label: "Hemat", hint: "hingga 96 kbps" },
-    { id: "medium", label: "Standar", hint: "hingga 128 kbps" },
-    { id: "high", label: "Tinggi", hint: "hingga 192 kbps" },
-    { id: "best", label: "Terbaik", hint: "audio sumber" }
+    { id: "low", label: "Hemat", hint: "OPUS sekitar 50 kbps" },
+    { id: "medium", label: "Standar", hint: "OPUS sekitar 70 kbps" },
+    { id: "high", label: "Tinggi", hint: "OPUS/AAC hingga 160 kbps" },
+    { id: "best", label: "Terbaik", hint: "audio sumber" },
+    { id: "flac", label: "FLAC", hint: "lossless dari katalog Tracks" }
   ];
 
   function qualitySegmented(action, current, extra, qualities) {
@@ -1062,11 +1063,11 @@
       );
       els.playerDownload.disabled = !downloadable;
       els.playerDownload.title = downloadable
-        ? "Unduh audio dari YouTube"
+        ? "Unduh audio (FLAC bila tersedia)"
         : "Unduhan tersedia untuk lagu YouTube";
       els.playerDownload.setAttribute(
         "aria-label",
-        downloadable ? "Unduh audio dari YouTube" : "Unduhan tidak tersedia"
+        downloadable ? "Unduh audio" : "Unduhan tidak tersedia"
       );
     }
 
@@ -4178,7 +4179,7 @@
       (statsForNerds ? " is-active" : "") +
       '" type="button" data-action="set-stats" data-value="true">Aktif</button>' +
       "</div></div></div>" +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Kualitas unduhan (MP3)</div><div class="settings-row__sub">Semua unduhan YouTube dikonversi ke MP3 dengan judul, artis, album, dan sampul tertanam. Membutuhkan ffmpeg.exe di folder aplikasi.</div></div>' +
+      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Kualitas unduhan</div><div class="settings-row__sub">Unduhan berjalan langsung di browser, tanpa server lokal maupun ffmpeg. Pilih <strong>FLAC</strong> untuk mengambil versi lossless dari katalog Tracks; bila lagunya tidak tersedia, audio terbaik YouTube yang diunduh. Pilihan lain mengunduh audio sumber YouTube (OPUS/AAC).</div></div>' +
       '<div class="settings-row__action">' +
       qualitySegmented("set-download-quality", downloadQuality) +
       "</div></div></section>" +
@@ -4202,7 +4203,7 @@
       '<div class="settings-row__action"><button class="btn btn--danger btn--small" type="button" data-action="settings-clear">Hapus</button></div></div>' +
       "</section>" +
       '<section class="settings-group"><h3 class="settings-group__title">Tentang</h3>' +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Vinyl</div><div class="settings-row__sub">Pemutar musik streaming bergaya semi-Apple Music di browser. Tanpa pemasangan dan tanpa akun, lengkap dengan FLAC lossless.</div></div>' +
+      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Vinyl</div><div class="settings-row__sub">Pemutar musik streaming bergaya semi-Apple Music di browser. Tanpa pemasangan dan tanpa akun, lengkap dengan FLAC lossless dan unduhan langsung dari browser.</div></div>' +
       '<div class="settings-row__action"><button class="text-btn" type="button" data-action="settings-shortcuts">Pintasan</button></div></div>' +
       '<p class="about-line">Dibuat dengan HTML, CSS, dan JavaScript murni, ditambah fungsi serverless untuk pencarian dan streaming. <strong>Space</strong> putar/jeda · <strong>←/→</strong> geser 5 detik · <strong>⌘K/Ctrl K</strong> cari · <strong>M</strong> bisukan · <strong>Q</strong> antrean.</p>' +
       "</section>" +

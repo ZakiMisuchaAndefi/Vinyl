@@ -74,10 +74,12 @@
     }
   }
 
-  async function resolve(track) {
+  // `options.force` dipakai unduhan: FLAC dicoba walau kualitas streaming
+  // sedang bukan FLAC. Tanpa force, hanya aktif saat pengguna memilih FLAC.
+  async function resolve(track, options) {
     if (!track || track.provider !== "youtube") return null;
     if (track.losslessUnavailable) return null;
-    if (!shouldUse()) return null;
+    if (!(options && options.force) && !shouldUse()) return null;
 
     const info = parseInfo(track);
     if (!info.song) return null;
