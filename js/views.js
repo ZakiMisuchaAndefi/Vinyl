@@ -1295,7 +1295,7 @@
     }
 
     const allStation =
-      '<button class="station" type="button" data-action="shuffle-library" style="--tile-a:#fa2d48;--tile-b:#5e5ce6">' +
+      '<button class="station" type="button" data-action="shuffle-library" style="--tile-a:#c92a68;--tile-b:#2f6f9e">' +
       '<span class="station__top"><span class="station__badge">' +
       icon("radio") +
       "Stasiun utama</span><span class=\"station__play\">" +

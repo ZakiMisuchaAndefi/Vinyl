@@ -606,7 +606,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #fff;
+  color: var(--text);
   font-family: var(--font-display);
   font-size: clamp(24px, 3.6vw, 42px);
   font-weight: 700;
@@ -634,7 +634,7 @@
 }
 
 .lyrics-line:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline: 2px solid var(--border-strong);
   outline-offset: 6px;
   border-radius: 10px;
 }
@@ -643,10 +643,10 @@
   opacity: 1;
   filter: none;
   transform: none;
-  color: #fff;
+  color: var(--text);
   text-shadow:
-    0 0 34px rgba(255, 255, 255, 0.26),
-    0 0 90px rgba(255, 255, 255, 0.1);
+    0 0 34px var(--pink-soft),
+    0 0 90px var(--pink-tint);
 }
 
 .lyrics-line__text {
@@ -661,11 +661,11 @@
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: 0;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-3);
 }
 
 .lyrics-line.is-active .lyrics-line__translit {
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--text-2);
 }
 
 .lyrics-plain p {
@@ -675,7 +675,7 @@
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: -0.015em;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--text-2);
 }
 
 .lyrics-empty {
@@ -686,7 +686,7 @@
   gap: 8px;
   min-height: 46vh;
   padding: 32px 14px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-3);
   text-align: center;
 }
 
@@ -694,7 +694,7 @@
   width: 38px;
   height: 38px;
   margin-bottom: 4px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-2);
 }
 
 .lyrics-empty p {
@@ -704,7 +704,7 @@
 }
 
 .lyrics-empty strong {
-  color: #fff;
+  color: var(--text);
   font-size: 16px;
   font-weight: 600;
 }
@@ -999,16 +999,16 @@
    supaya sampul dan teks lebih menonjol. */
 html:not([data-theme="light"]) .now-playing {
   background: #000;
-  color: #fff;
-  --text: #fff;
-  --text-2: rgba(255, 255, 255, 0.74);
-  --text-3: rgba(255, 255, 255, 0.52);
-  --border-strong: rgba(255, 255, 255, 0.42);
-  --bg-active: rgba(255, 255, 255, 0.22);
-  --bg-hover: rgba(255, 255, 255, 0.12);
-  --bg-hover-strong: rgba(255, 255, 255, 0.2);
-  --accent-soft: rgba(255, 255, 255, 0.26);
-  --accent-text: #fff;
+  color: #f6eef1;
+  --text: #f6eef1;
+  --text-2: rgba(246, 238, 241, 0.74);
+  --text-3: rgba(246, 238, 241, 0.52);
+  --border-strong: rgba(246, 238, 241, 0.42);
+  --bg-active: rgba(246, 238, 241, 0.22);
+  --bg-hover: rgba(246, 238, 241, 0.12);
+  --bg-hover-strong: rgba(246, 238, 241, 0.2);
+  --accent-soft: rgba(246, 238, 241, 0.26);
+  --accent-text: #f6eef1;
   --ink: #f6eef1;
   --ink-2: rgba(246, 238, 241, 0.62);
   --ink-3: rgba(246, 238, 241, 0.38);
@@ -1016,13 +1016,13 @@ html:not([data-theme="light"]) .now-playing {
   --pink-soft: rgba(242, 155, 187, 0.18);
   --icy: #a9d3f0;
   --surface: #000;
-  --surface-deep: #120d11;
+  --surface-deep: #141014;
   --glass-1: rgba(255, 255, 255, 0.08);
   --glass-2: rgba(255, 255, 255, 0.12);
   --border-glass: rgba(255, 255, 255, 0.11);
   --border-glass-strong: rgba(255, 255, 255, 0.14);
   --shadow-glass: 0 6px 16px rgba(0, 0, 0, 0.16);
-  --pill-scrim: rgba(21, 21, 24, 0.95);
+  --pill-scrim: rgba(10, 10, 12, 0.95);
 }
 
 .now-playing[hidden] {
