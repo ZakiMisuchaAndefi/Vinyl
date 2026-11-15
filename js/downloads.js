@@ -15,27 +15,6 @@
 
   const active = new Map();
 
-  // Metadata itag audio YouTube dan ekstensi berkas yang dihasilkan.
-  const FORMATS = {
-    139: { ext: ".m4a", type: "audio/mp4", codec: "AAC" },
-    140: { ext: ".m4a", type: "audio/mp4", codec: "AAC" },
-    141: { ext: ".m4a", type: "audio/mp4", codec: "AAC" },
-    249: { ext: ".webm", type: "audio/webm", codec: "OPUS" },
-    250: { ext: ".webm", type: "audio/webm", codec: "OPUS" },
-    251: { ext: ".webm", type: "audio/webm", codec: "OPUS" },
-    774: { ext: ".webm", type: "audio/webm", codec: "OPUS" }
-  };
-
-  // Urutan itag per pilihan kualitas unduhan. Kandidat berikutnya dipakai bila
-  // format sebelumnya tidak tersedia untuk video tersebut.
-  const ITAGS = {
-    low: [249, 250, 251],
-    medium: [250, 251],
-    high: [251, 140],
-    best: [251, 140],
-    flac: [251, 140]
-  };
-
   function toast(message, options) {
     if (AM.UI && typeof AM.UI.toast === "function") return AM.UI.toast(message, options);
     return null;
@@ -69,14 +48,6 @@
 
   function isLocalHost() {
     return /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname);
-  }
-
-  function streamEngine() {
-    const yt = AM.Youtube;
-    const engine =
-      yt && typeof yt.getStreamEngine === "function" ? yt.getStreamEngine() : "";
-    if (engine === "proxy" || engine === "iframe" || engine === "invidious") return engine;
-    return isLocalHost() ? "proxy" : "invidious";
   }
 
   /* ------------------------------------------------------------------------
@@ -237,55 +208,31 @@
      Audio YouTube
      ------------------------------------------------------------------------ */
 
+  function codecOf(type) {
+    const value = String(type || "").toLowerCase();
+    if (value.includes("flac")) return "FLAC";
+    if (value.includes("webm") || value.includes("opus")) return "OPUS";
+    if (value.includes("mp4") || value.includes("m4a") || value.includes("aac")) return "AAC";
+    return "Audio";
+  }
+
   async function downloadYoutube(track, quality, handle) {
-    const engine = streamEngine();
-    if (engine === "iframe") {
-      throw new Error("Pemutar resmi YouTube tidak menyediakan audio untuk diunduh.");
-    }
+    const qualityId = ["low", "medium", "high", "best"].includes(quality) ? quality : "best";
 
-    const qualityId = ITAGS[quality] ? quality : "best";
+    // Server lokal memakai proxy /api/stream yang sudah ber-Range. Di web,
+    // /api/download menyelesaikan audio lewat InnerTube lalu meneruskannya.
+    const base = isLocalHost()
+      ? "/api/stream?id=" + encodeURIComponent(track.sourceId) + "&quality=" + qualityId
+      : "/api/download?video=" + encodeURIComponent(track.sourceId) + "&quality=" + qualityId;
 
-    // Server lokal sudah punya proxy audio ber-Range; kualitas diteruskan apa
-    // adanya. Di web, proxy /api/download memakai itag Invidious.
-    if (engine === "proxy") {
-      const url =
-        apiBase() +
-        "/api/stream?id=" +
-        encodeURIComponent(track.sourceId) +
-        "&quality=" +
-        encodeURIComponent(qualityId);
-      updateToast(handle, "Mengunduh “" + track.title + "” · audio 0%");
-      const file = await fetchBlob(url, {
-        onProgress: (done, total) => progress(handle, track, "audio", done, total)
-      });
-      const name = fileName(track, extensionOf(file.type, ".webm"));
-      saveBlob(file.blob, name);
-      return { blob: file.blob, name, format: extensionOf(file.type, ".webm").slice(1).toUpperCase() };
-    }
-
-    let lastError = null;
-    for (const itag of ITAGS[qualityId] || ITAGS.best) {
-      const format = FORMATS[itag] || FORMATS[251];
-      const url =
-        apiBase() +
-        "/api/download?video=" +
-        encodeURIComponent(track.sourceId) +
-        "&itag=" +
-        itag;
-      try {
-        updateToast(handle, "Mengunduh “" + track.title + "” · " + format.codec + " 0%");
-        const file = await fetchBlob(url, {
-          type: format.type,
-          onProgress: (done, total) => progress(handle, track, format.codec, done, total)
-        });
-        const name = fileName(track, extensionOf(file.type, format.ext));
-        saveBlob(file.blob, name);
-        return { blob: file.blob, name, format: format.codec };
-      } catch (error) {
-        lastError = error;
-      }
-    }
-    throw lastError || new Error("Unduhan gagal.");
+    updateToast(handle, "Mengunduh “" + track.title + "” · audio 0%");
+    const file = await fetchBlob(apiBase() + base, {
+      onProgress: (done, total) => progress(handle, track, "audio", done, total)
+    });
+    const extension = extensionOf(file.type, ".webm");
+    const name = fileName(track, extension);
+    saveBlob(file.blob, name);
+    return { blob: file.blob, name, format: codecOf(file.type) };
   }
 
   /* ------------------------------------------------------------------------
