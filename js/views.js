@@ -1284,7 +1284,7 @@
           emptyState({
             icon: "radio",
             title: "Radio belum mengudara",
-            text: "Tambahkan lagu ke perpustakaan untuk membuat stasiun acak berdasarkan genre dan artis.",
+            text: "Tambahkan lagu ke perpustakaan, atau mulai stasiun dari lagu mana pun di Beranda dan pemutar.",
             actions:
               '<button class="btn btn--primary" type="button" data-action="open-import">' +
               icon("upload") +
@@ -1493,7 +1493,7 @@
             title: "Belum ada riwayat pemutaran",
             text: L.allTracks().length
               ? "Mulai putar satu lagu, lalu kembali ke halaman ini."
-              : "Impor koleksi musikmu untuk mulai membangun riwayat.",
+              : "Putar lagu dari beranda atau pencarian untuk mulai membangun riwayat.",
             actions:
               '<button class="btn btn--primary" type="button" data-action="shuffle-library">' +
               icon("shuffle") +

@@ -1,54 +1,71 @@
-# Musik
+# Vinyl
 
-Pemutar musik bergaya Apple Music yang dibuat dengan HTML, CSS, dan JavaScript murni. Koleksi lokal tetap berada di perangkatmu — tidak ada server cloud, tidak ada unggahan, dan tidak ada akun. Kamu juga bisa memutar musik langsung dari internet tanpa mengimpor file.
+Vinyl adalah pemutar musik **streaming di browser** dengan nuansa semi-Apple Music. Buka situsnya, cari lagu, lalu putar langsung — tanpa memasang aplikasi, tanpa akun, dan tanpa iklan. Audio dialirkan dari internet, dan bila lagunya tersedia kamu bisa mendengarkan **FLAC lossless**.
 
-Tema gelap dan terang dengan palet Vinyl (pink, icy, dan ink), lengkap dengan sampul prosedural untuk lagu tanpa artwork.
+Tampilannya mengikuti rasa Apple Music — pemutar penuh, panel lirik, dan transisi halus — dengan identitas sendiri: palet Vinyl (pink, icy, dan ink), tema gelap AMOLED dan terang, serta sampul prosedural untuk lagu tanpa artwork. Semuanya berjalan di browser modern, termasuk di ponsel.
+
+Perpustakaan pribadi tetap ada sebagai pelengkap: impor MP3, M4A, FLAC, WAV, OGG, dan format lain yang didukung browser, lalu simpan di perangkat ini. Tapi tidak wajib — seluruh katalog streaming bisa diputar tanpa mengimpor satu file pun.
 
 ## Fitur
 
-- **Perpustakaan pribadi** — impor MP3, M4A, FLAC, WAV, OGG, dan format audio lain yang didukung browser.
+**Streaming tanpa pemasangan**
+
+- **Langsung dari browser** — buka [vinyl.my.id](https://vinyl.my.id), cari lagu, lalu putar. Tidak ada aplikasi yang perlu diunduh, tidak ada akun, tidak ada iklan.
+- **FLAC lossless** — pilih format **FLAC** di Pengaturan untuk mengambil versi lossless dari katalog Tracks; kalau tidak tersedia, pemutar otomatis memakai audio terbaik dari YouTube.
+- **Chip format jujur** — pemutar selalu menampilkan format yang benar-benar mengalir (`OPUS · 48 kHz`, `FLAC · 44,1 kHz`), dan bisa diklik untuk membuka **Stats for nerds**.
+- **Musik dari YouTube** — cari dengan kata kunci atau tempel tautan video; audio diputar murni tanpa tampilan video dan tanpa iklan.
+- **Radio otomatis** — antrean diisi lagu serupa secara otomatis, mirip autoplay YouTube Music/Spotify.
+- **Beranda streaming** — rekomendasi harian, ubin cepat, stasiun radio, dan lagu populer siap diputar sekali klik.
+- **Pencarian langsung** — satu kotak mencari perpustakaan dan YouTube sekaligus, dengan halaman berikutnya lewat **Muat lebih banyak**.
+- **Suka lintas sumber** — lagu streaming dan lagu lokal bisa ditandai hati dan tetap ada setelah muat ulang.
+- **Lirik sinkron + romanisasi** — lirik LRC bergaya Apple Music, baris aktif membesar dan terang; aksara non-Latin otomatis diberi transliterasi lokal.
+- **Timer tidur** — hentikan pemutaran setelah 5, 10, 15, 30, 45, atau 60 menit, atau di akhir lagu; volume menurun perlahan sebelum jeda.
+
+**Perpustakaan pribadi (opsional)**
+
 - **Impor fleksibel** — pilih beberapa file, pilih satu folder, atau seret file ke jendela aplikasi.
 - **Metadata otomatis** — judul, artis, album, genre, tahun, nomor trek, dan sampul tertanam dibaca dari tag ID3, Vorbis, MP4, atau RIFF INFO.
-- **Tersimpan lokal** — file audio dan sampul disimpan di IndexedDB browser, jadi tetap ada setelah halaman ditutup.
+- **Tersimpan lokal** — file audio dan sampul disimpan di IndexedDB browser, jadi tetap ada setelah halaman ditutup dan tidak diunggah ke mana pun.
 - **Pemutar lengkap** — putar, jeda, sebelumnya/berikutnya, geser posisi, volume, acak, ulangi semua/satu lagu, dan antrean.
 - **Lanjut setelah muat ulang** — lagu, posisi, antrean, volume, acak, dan mode ulangi dipulihkan saat halaman dibuka lagi; pemutaran dimulai dalam keadaan jeda.
-- **Riwayat pemutaran** — lagu yang diputar minimal 30 detik (atau selesai jika lebih pendek) masuk ke halaman **Riwayat**, terbaru di atas. Memutar ulang memindahkannya ke atas tanpa duplikat.
-- **Musik dari YouTube tanpa impor** — cari lagu di YouTube lewat halaman **Pencarian** dengan kata kunci atau tempel tautan videonya; pencarian dan pemutaran memakai InnerTube, tanpa API key resmi.
-- **Pencarian langsung** — kotak pencarian mencari perpustakaan dan YouTube sekaligus dalam satu halaman.
-- **Suka lintas sumber** — lagu lokal dan lagu YouTube sama-sama bisa ditandai hati. Lagu YouTube yang disukai tersimpan di perangkat ini dan tetap muncul di halaman **Suka** setelah halaman dimuat ulang.
-- **Unduhan MP3** — simpan lagu YouTube sebagai `.mp3` dengan metadata judul, artis, album, dan sampul tertanam. Membutuhkan `ffmpeg.exe`.
-- **Impor ke playlist** — impor file langsung dari halaman playlist; lagu baru masuk ke perpustakaan dan playlist sekaligus, sedangkan lagu yang sudah ada tetap ditambahkan ke playlist tanpa menduplikasi perpustakaan.
-- **Timer tidur** — hentikan pemutaran setelah 5, 10, 15, 30, 45, atau 60 menit, atau di akhir lagu; volume menurun perlahan sebelum jeda.
-- **Lirik tertanam** — lirik dari tag audio (ID3 `USLT`/`SYLT`, Vorbis `LYRICS`, MP4 `©lyr`) tampil di layar lirik penuh bergaya Apple Music. Lirik LRC disinkronkan, baris aktif membesar dan terang, baris lain memudar; panel menggulir halus mengikuti lagu. Teks biasa tampil sebagai fallback.
-- **Romanisasi lirik** — baris non-Latin (Han, Hangul, kana, Arab, Kiril, Thai) otomatis diberi transliterasi di bawah baris aslinya. Diproses lokal, tanpa API berbayar.
-- **Beranda streaming** — menu utama langsung menampilkan rekomendasi lagu, stasiun radio, dan lagu populer yang bisa diputar sekali klik, tanpa perlu impor.
-- **Media Session** — kontrol pemutaran muncul di pusat media sistem saat browser mendukung.
+- **Riwayat pemutaran** — lagu yang diputar minimal 30 detik (atau selesai jika lebih pendek) masuk ke halaman **Riwayat**, terbaru di atas.
+- **Impor ke playlist** — impor file langsung dari halaman playlist; lagu baru masuk ke perpustakaan dan playlist sekaligus.
+- **Unduhan MP3** — simpan lagu YouTube sebagai `.mp3` dengan metadata judul, artis, album, dan sampul tertanam. Membutuhkan `ffmpeg.exe` dan hanya tersedia di versi lokal.
+
+**Antarmuka & lain-lain**
+
+- **Gaya semi-Apple Music** — pemutar penuh, panel lirik, dan transisi halus, dengan identitas visual Vinyl.
+- **Tema** — gelap AMOLED dan terang, dapat diganti dari sidebar atau halaman **Pengaturan**.
 - **Playlist & favorit** — buat playlist, tambahkan lagu dari menu konteks, ganti nama, hapus, dan tandai lagu favorit.
 - **Jelajahi koleksi** — Jelajahi, Radio, Terbaru, Artis, Album, Lagu, Suka, genre, pencarian, dan halaman detail.
-- **Tema** — gelap dan terang, dapat diganti dari sidebar atau halaman **Pengaturan**.
 - **Pengaturan terpusat** — halaman khusus dengan nav bertanda ikon + teks, berisi tampilan, pemutaran, audio, data, dan info penyimpanan dalam satu kolom.
 - **Perpustakaan demo** — 12 lagu yang dibuat secara prosedural untuk mencoba semua fitur tanpa file pribadi.
 - **Responsif** — sidebar berubah menjadi laci di tablet, dan tata letak ponsel tetap nyaman digunakan.
 - **Pintasan keyboard** — kendalikan pemutaran dan pencarian tanpa meninggalkan keyboard.
+- **Media Session** — kontrol pemutaran muncul di pusat media sistem saat browser mendukung.
 - **Analitik web** — kunjungan halaman dan navigasi aplikasi dicatat melalui Vercel Web Analytics saat di-deploy ke Vercel.
 
 ## Menjalankan
 
-### Windows — cara termudah
+### Langsung di browser (disarankan)
 
-Klik dua kali **`Jalankan.bat`**. Skrip akan menyalakan server lokal di `http://127.0.0.1:4173/` dan membuka browser. Jendela PowerShell server diminimalkan; tutup jendela itu untuk menghentikan server.
+Buka **[vinyl.my.id](https://vinyl.my.id)**. Tidak ada yang perlu dipasang: pencarian, radio, dan streaming audio berjalan lewat fungsi serverless di Vercel. Versi online sudah mencakup FLAC lossless, lirik, radio otomatis, dan perpustakaan pribadi di penyimpanan browser.
 
-### Manual dengan PowerShell
+Satu-satunya fitur yang tidak tersedia di versi online adalah **unduhan MP3**, karena `ffmpeg` tidak ikut terpasang di Vercel. Untuk itu, jalankan versi lokal.
+
+### Jalankan lokal (opsional)
+
+Versi lokal berguna untuk mengunduh MP3, mengembangkan proyek, atau memakai proxy audio sendiri. Butuh **Node.js** dan PowerShell di Windows.
 
 ```powershell
-cd "C:\Users\Kii\Documents\Default Project"
+cd "C:\path\ke\vinyl"
 powershell -NoProfile -ExecutionPolicy Bypass -File .\server.ps1
 ```
 
 Lalu buka **http://127.0.0.1:4173/**.
 
 Tekan `Ctrl+C` di jendela PowerShell untuk menghentikan server.
-*lakukan jika diperlukan
+
 ### Vercel
 
 Repo ini juga siap di-deploy ke **Vercel** tanpa build step:
@@ -60,7 +77,7 @@ Repo ini juga siap di-deploy ke **Vercel** tanpa build step:
 
 > Di Vercel, `ffmpeg` tidak ikut terpasang sehingga tombol unduhan MP3 nonaktif. Untuk unduhan MP3, jalankan versi lokal dengan `ffmpeg.exe`.
 
-> **Penting:** jalankan lewat server lokal agar IndexedDB aktif dan koleksi tersimpan permanen. Membuka `index.html` langsung lewat `file://` masih bisa dipakai, tetapi browser dapat menonaktifkan penyimpanan sehingga koleksi hanya bertahan selama tab terbuka.
+> **Penting:** di versi lokal, jalankan lewat server agar IndexedDB aktif dan koleksi tersimpan permanen. Membuka `index.html` langsung lewat `file://` masih bisa dipakai, tetapi browser dapat menonaktifkan penyimpanan sehingga koleksi hanya bertahan selama tab terbuka.
 
 ### Endpoint server lokal
 
@@ -82,7 +99,7 @@ Saat di-deploy ke **Vercel**, endpoint yang sama dilayani fungsi Node di folder 
 
 ## Beranda streaming
 
-Halaman **Dengarkan Sekarang** tidak lagi hanya menampilkan perpustakaan lokal. Saat dibuka, aplikasi mencari saran lagu dari YouTube lalu menampilkan:
+Halaman **Dengarkan Sekarang** adalah etalase utama Vinyl. Saat dibuka, aplikasi mencari saran lagu dari internet lalu menampilkan:
 
 - **Ubin cepat** — Rekomendasi harian, Lagu galau, Akustik santai, Nostalgia 80–90an, Dangdut koplo, dan Pop internasional. Klik satu ubin untuk langsung memutar hasilnya.
 - **Rekomendasi untukmu** — delapan lagu pilihan; tombol putar muncul saat kartu diarahkan kursor.
@@ -92,7 +109,9 @@ Halaman **Dengarkan Sekarang** tidak lagi hanya menampilkan perpustakaan lokal. 
 
 Rekomendasi memakai pencarian YouTube yang sama dengan halaman **Pencarian**, jadi tidak perlu API key. Hasilnya disimpan sementara di tab (30 menit) supaya beranda tidak mencari ulang setiap kali dibuka. Tombol **Putar rekomendasi** dan **Acak** memutar seluruh daftar; setelah lagu terakhir, radio otomatis menambahkan lagu serupa seperti autoplay YouTube Music/Spotify.
 
-## Mengimpor musik
+## Mengimpor musik (opsional)
+
+Impor hanya diperlukan kalau kamu ingin memutar file milikmu sendiri. Untuk streaming, lewati bagian ini — buka **Pencarian** atau langsung putar dari beranda.
 
 1. Klik **Impor musik** di sidebar atau tombol **Impor** di kanan atas.
 2. Pilih **Pilih file**, **Pilih folder**, atau seret file ke jendela aplikasi.
@@ -130,7 +149,7 @@ Tidak perlu API key, akun, atau impor file. Cukup buka **Pencarian** dan ketik k
 
 ### Cara memakai YouTube
 
-1. Jalankan aplikasi lewat `Jalankan.bat` atau `server.ps1` (butuh Node.js), atau langsung buka versi Vercel — tidak perlu memasang apa pun di komputer.
+1. Buka **[vinyl.my.id](https://vinyl.my.id)** — tidak perlu memasang apa pun. Untuk pengembangan atau unduhan MP3, jalankan versi lokal lewat `server.ps1` (butuh Node.js).
 2. Buka **Pencarian**, lalu ketik judul lagu atau nama artis — atau tempel tautan video langsung. Bagian **Dari YouTube** muncul otomatis di bawah hasil perpustakaan.
 3. Hasil pencarian bisa diputar lewat **Putar semua** atau **Acak**; satu video dari tautan langsung diputar sendiri.
 4. Kendalikan dari bar pemutar aplikasi seperti biasa — putar/jeda, geser posisi, volume, antrean, acak, dan ulangi tetap berfungsi. Lagu YouTube tampil seperti lagu lain karena yang diputar hanya audionya.
@@ -216,13 +235,14 @@ Pemutaran Spotify penuh juga memerlukan akun **Spotify Premium**, OAuth, dan Spo
 
 ## Penyimpanan & privasi
 
-- Data disimpan di **IndexedDB** milik browser, bukan di server.
+- Lagu yang di-streaming **tidak disimpan**; audio mengalir langsung dari penyedia ke browser. Yang tersimpan hanya antrean, riwayat, pengaturan, dan daftar Suka.
+- Perpustakaan pribadi (jika kamu mengimpor) disimpan di **IndexedDB** milik browser, bukan di server.
 - Kapasitas bergantung pada kuota browser (biasanya beberapa GB). Pengaturan menampilkan perkiraan pemakaian.
 - Semua file lokal tetap di perangkat ini dan tidak pernah diunggah ke internet.
 - Saat memakai pencarian YouTube, kata kunci pencarian atau tautan yang kamu tempel dan metadata video dikirim ke YouTube (via InnerTube dan oEmbed). Di Vercel, audio diputar dari instance Invidious sehingga instance itu dan YouTube menerima koneksi langsung dari perangkatmu. Tidak ada data perpustakaan lokal yang ikut dikirim.
 - **Daftar Suka dari YouTube** disimpan di `localStorage` browser. **File hasil unduhan** disimpan sebagai file biasa di folder `downloads/` dan tidak diunggah ke mana pun.
 - **Pengaturan → Hapus semua data** menghapus lagu, sampul, playlist, dan favorit lokal dari aplikasi. File asli di folder musikmu dan file di folder `downloads/` tidak terhapus.
-- Menghapus data situs di browser juga akan menghapus koleksi Musik, antrean, pengaturan, dan daftar Suka dari YouTube.
+- Menghapus data situs di browser juga akan menghapus koleksi Vinyl, antrean, pengaturan, dan daftar Suka dari YouTube.
 
 ## Pintasan keyboard
 
@@ -246,9 +266,10 @@ Pintasan selain `Esc` tidak aktif saat kamu sedang mengetik di kolom input.
 ```text
 .
 ├── index.html
-├── Jalankan.bat
-├── server.ps1
+├── package.json
+├── server.ps1          # server lokal opsional (endpoint audio, unduhan MP3)
 ├── README.md
+├── vercel.json         # konfigurasi deploy serverless
 ├── downloads/          # hasil unduhan MP3 YouTube (dibuat otomatis)
 ├── api/                # fungsi serverless Vercel (Node)
 │   ├── _innertube.js   # klien InnerTube untuk pencarian
@@ -260,6 +281,8 @@ Pintasan selain `Esc` tidak aktif saat kamu sedang mengetik di kolom input.
 │   ├── stream.js       # GET /api/stream
 │   ├── radio.js        # GET /api/radio
 │   └── health.js       # GET /api/health (pilih mesin audio)
+├── scripts/            # CLI bantu untuk mencoba InnerTube dan katalog FLAC
+├── assets/             # logo dan font
 ├── css/
 │   ├── base.css        # variabel warna, tipografi, tombol, form
 │   ├── layout.css      # kerangka aplikasi, topbar, area konten
@@ -279,6 +302,7 @@ Pintasan selain `Esc` tidak aktif saat kamu sedang mengetik di kolom input.
     ├── online.js       # sumber musik online (YouTube), cache & daftar Suka
     ├── youtube.js      # pencarian InnerTube + URL audio (proxy/Invidious/IFrame)
     ├── lossless.js     # pencarian FLAC (Tracks) saat format streaming = FLAC
+    ├── lyrics.js       # pencarian lirik LRCLIB saat lirik tidak tertanam
     ├── downloads.js    # unduhan MP3 YouTube lewat job server
     ├── home.js         # feed streaming untuk beranda
     ├── library.js      # state perpustakaan, impor, playlist, riwayat
@@ -305,10 +329,10 @@ Pintasan selain `Esc` tidak aktif saat kamu sedang mengetik di kolom input.
 
 ## Kompatibilitas
 
-Diuji pada Microsoft Edge di Windows. Aplikasi juga berjalan di browser modern lain yang mendukung IndexedDB, File API, dan elemen `<audio>`. Tampilan memakai font sistem. Musik lokal tidak memerlukan internet; pemutaran dan pencarian YouTube memerlukan koneksi internet.
+Vinyl berjalan di browser modern — Chrome, Edge, Safari, dan Firefox — yang mendukung elemen `<audio>`, IndexedDB, dan File API. Versi online tidak memerlukan pemasangan apa pun, hanya koneksi internet. Versi lokal (opsional) berjalan di Windows dengan PowerShell dan Node.js; `ffmpeg.exe` hanya dibutuhkan untuk unduhan MP3. Tampilan memakai font sistem.
 
 ## Lisensi
 
-Proyek ini dibuat untuk penggunaan pribadi. Lagu demo dihasilkan secara prosedural oleh aplikasi dan bukan rekaman berhak cipta. Video yang diputar lewat YouTube tetap milik pencipta dan pemegang haknya; aplikasi hanya menautkan ke aliran resmi dari penyedia tersebut.
+Vinyl adalah proyek pribadi yang dibagikan apa adanya. Lagu demo dihasilkan secara prosedural oleh aplikasi dan bukan rekaman berhak cipta. Audio yang diputar dari YouTube dan katalog FLAC tetap milik pencipta dan pemegang haknya; aplikasi hanya menautkan ke aliran resmi dari penyedia tersebut.
 
 Romanisasi Han memakai [pinyin-pro](https://github.com/zh-lx/pinyin-pro) 3.26.0 (lisensi MIT), dibundel lokal di `js/vendor/pinyin-pro.js`. Pustaka lain adalah kode proyek ini sendiri.

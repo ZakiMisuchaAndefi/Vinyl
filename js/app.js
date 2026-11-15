@@ -317,7 +317,7 @@
       els.view.innerHTML =
         '<div class="page"><div class="empty"><span class="empty__icon">' +
         icon("music") +
-        '</span><h2>Memuat perpustakaan…</h2><p>Menyiapkan koleksi musikmu.</p></div></div>';
+        '</span><h2>Menyiapkan Vinyl…</h2><p>Memuat koleksi, antrean, dan pengaturanmu.</p></div></div>';
     }
 
     try {
@@ -4202,9 +4202,9 @@
       '<div class="settings-row__action"><button class="btn btn--danger btn--small" type="button" data-action="settings-clear">Hapus</button></div></div>' +
       "</section>" +
       '<section class="settings-group"><h3 class="settings-group__title">Tentang</h3>' +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Musik</div><div class="settings-row__sub">Pemutar musik lokal bergaya Apple Music. Semua data tetap di perangkat ini.</div></div>' +
+      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Vinyl</div><div class="settings-row__sub">Pemutar musik streaming bergaya semi-Apple Music di browser. Tanpa pemasangan dan tanpa akun, lengkap dengan FLAC lossless.</div></div>' +
       '<div class="settings-row__action"><button class="text-btn" type="button" data-action="settings-shortcuts">Pintasan</button></div></div>' +
-      '<p class="about-line">Dibuat dengan HTML, CSS, dan JavaScript tanpa server. <strong>Space</strong> putar/jeda · <strong>←/→</strong> geser 5 detik · <strong>⌘K/Ctrl K</strong> cari · <strong>M</strong> bisukan · <strong>Q</strong> antrean.</p>' +
+      '<p class="about-line">Dibuat dengan HTML, CSS, dan JavaScript murni, ditambah fungsi serverless untuk pencarian dan streaming. <strong>Space</strong> putar/jeda · <strong>←/→</strong> geser 5 detik · <strong>⌘K/Ctrl K</strong> cari · <strong>M</strong> bisukan · <strong>Q</strong> antrean.</p>' +
       "</section>" +
       "</div>"
     );
