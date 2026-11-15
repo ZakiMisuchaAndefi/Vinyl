@@ -720,6 +720,12 @@
   font-weight: 500;
 }
 
+.about-line a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* --------------------------------------------------------------------------
    Stats for nerds — panel info format audio
    -------------------------------------------------------------------------- */

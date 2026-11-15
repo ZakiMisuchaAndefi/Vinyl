@@ -330,10 +330,44 @@ Pintasan selain `Esc` tidak aktif saat kamu sedang mengetik di kolom input.
 
 ## Kompatibilitas
 
-Vinyl berjalan di browser modern — Chrome, Edge, Safari, dan Firefox — yang mendukung elemen `<audio>`, IndexedDB, File API, dan Blob. Versi online tidak memerlukan pemasangan apa pun, hanya koneksi internet. Unduhan FLAC maupun audio YouTube berjalan langsung di browser tanpa `ffmpeg`. Versi lokal (opsional) berjalan di Windows dengan PowerShell dan Node.js. Tampilan memakai font sistem.
+Vinyl berjalan di browser modern — Chrome, Edge, Safari, dan Firefox — yang mendukung elemen `<audio>`, IndexedDB, File API, dan Blob. Versi online tidak memerlukan pemasangan apa pun, hanya koneksi internet. Unduhan FLAC maupun audio YouTube berjalan langsung di browser tanpa `ffmpeg`. Versi lokal (opsional) berjalan di Windows dengan PowerShell dan Node.js. Tampilan memakai font Inter yang dibundel lokal dengan cadangan font sistem.
+
+## Terima kasih & kredit
+
+Vinyl tidak akan berjalan tanpa proyek open source, layanan publik, dan orang-orang yang membagikan karyanya. Terima kasih banyak kepada:
+
+**Pustaka & kode**
+
+| Proyek | Pembuat | Lisensi | Dipakai untuk |
+| --- | --- | --- | --- |
+| [pinyin-pro](https://github.com/zh-lx/pinyin-pro) | [zh-lx](https://github.com/zh-lx) | MIT | Romanisasi Han (Mandarin) pada lirik, dibundel di `js/vendor/pinyin-pro.js` |
+| [Inter](https://github.com/rsms/inter) | [Rasmus Andersson / The Inter Project Authors](https://github.com/rsms/inter) | SIL OFL 1.1 | Font antarmuka di `assets/fonts` |
+| [LRCLIB](https://github.com/tranxuanthang/lrclib) | [tranxuanthang](https://github.com/tranxuanthang) | MIT | Pencarian lirik sinkron lewat `lrclib.net` |
+| [Monochrome](https://github.com/monochrome-music/monochrome) | [monochrome-music](https://github.com/monochrome-music) | Apache-2.0 | Katalog dan streaming FLAC `tracks.monochrome.st` |
+| [Invidious](https://github.com/iv-org/invidious) | [iv-org](https://github.com/iv-org) dan para operator instance | AGPL-3.0 | Sumber audio streaming YouTube di versi web |
+| [@vercel/analytics](https://github.com/vercel/analytics) | [Vercel](https://github.com/vercel) | MIT | Analitik halaman yang ramah privasi |
+| [tombulled/innertube](https://github.com/tombulled/innertube) | [tombulled](https://github.com/tombulled) | MIT | Referensi klien InnerTube untuk pencarian dan audio YouTube |
+
+**Layanan & API**
+
+- **YouTube / YouTube Music** — pencarian, metadata, thumbnail (oEmbed dan `i.ytimg.com`), serta audio lewat InnerTube. Video, audio, dan metadata tetap milik pemiliknya.
+- **Tracks (`tracks.monochrome.st`)** — katalog dan streaming FLAC.
+- **LRCLIB (`lrclib.net`)** — lirik sinkron.
+- **Invidious (`yt.chocolatemoo53.com`)** — instance publik yang memutar audio YouTube di versi web. Terima kasih kepada operatornya yang menjaga server dan bandwidth tetap hidup.
+- **Vercel** — hosting statis dan fungsi serverless di folder `api/`, termasuk Web Analytics.
+
+**Ucapan terima kasih**
+
+- Untuk semua maintainer dan kontributor proyek di atas yang bekerja tanpa bayaran.
+- Untuk operator instance Invidious publik yang menyediakan server dan bandwidth.
+- Untuk komunitas musik open source dan para kontributor LRCLIB yang mengumpulkan lirik.
+- Untuk siapa pun yang melaporkan bug, memberi masukan, atau memakai Vinyl.
+
+Vinyl dibuat dan dirawat oleh [Zaki Misucha Andefi](https://github.com/ZakiMisuchaAndefi).
+
+> Vinyl tidak berafiliasi dengan YouTube, Apple Music, Monochrome, Invidious, LRCLIB, atau Vercel. Nama dan merek dagang milik pemiliknya masing-masing. Jika kamu merasa karyamu dipakai tanpa kredit yang layak, buka issue di repo ini.
 
 ## Lisensi
 
 Vinyl adalah proyek pribadi yang dibagikan apa adanya. Lagu demo dihasilkan secara prosedural oleh aplikasi dan bukan rekaman berhak cipta. Audio yang diputar dari YouTube dan katalog FLAC tetap milik pencipta dan pemegang haknya; aplikasi hanya menautkan ke aliran resmi dari penyedia tersebut.
 
-Romanisasi Han memakai [pinyin-pro](https://github.com/zh-lx/pinyin-pro) 3.26.0 (lisensi MIT), dibundel lokal di `js/vendor/pinyin-pro.js`. Pustaka lain adalah kode proyek ini sendiri.
