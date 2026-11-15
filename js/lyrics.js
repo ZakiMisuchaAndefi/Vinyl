@@ -6,7 +6,7 @@
   "use strict";
 
   const ENDPOINT = "https://lrclib.net/api/search";
-  const CLIENT = "Musik Web Streaming (https://github.com/ZakiMisuchaAndefi/Web-Streaming)";
+  const CLIENT = "Vinyl (https://github.com/ZakiMisuchaAndefi/Vinyl)";
   const cache = new Map();
 
   function normalize(value) {

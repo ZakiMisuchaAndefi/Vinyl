@@ -1,4 +1,8 @@
 {
+  "name": "vinyl",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pemutar musik streaming bergaya semi-Apple Music di browser, lengkap dengan FLAC lossless tanpa pemasangan.",
   "dependencies": {
     "@vercel/analytics": "^2.0.1"
   }
