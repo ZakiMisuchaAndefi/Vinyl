@@ -164,7 +164,10 @@ html {
   --leading: 1.4;
 }
 
-[data-theme="light"] {
+/* Token tema terang hanya untuk root. Tanpa :root, blok ini ikut mengenai
+   elemen yang memakai atribut data-theme (mis. tombol pilihan tema di
+   Pengaturan) dan mewarisi token tema yang salah. */
+:root[data-theme="light"] {
   color-scheme: light;
 
   --bg-app: #f4f4f7;

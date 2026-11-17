@@ -118,6 +118,7 @@
     youtubeErrorToast: null,
     nowPlayingOpen: false,
     nowPlayingCloseTimer: 0,
+    settingsFocusTarget: "",
     lastTimeDetail: null
   };
 
@@ -175,6 +176,11 @@
     const params = {};
     if (KEYED_ROUTES.has(name) && segments.length > 1) {
       params.key = segments.slice(1).join("/");
+    }
+
+    // Halaman detail Pengaturan: #/settings/pemutaran -> params.section.
+    if (name === "settings" && segments.length > 1) {
+      params.section = segments[1];
     }
 
     return { name, params, query, raw: "#/" + raw };
@@ -452,6 +458,8 @@
       syncSettingsControls();
       updateSleepTimerUI();
       fillStorageEstimate(document.getElementById("settingsRoot"));
+      bindSettingsPage(document.getElementById("settingsRoot"));
+      applySettingsFocusTarget();
     }
 
     updateActiveNav(route);
@@ -2414,6 +2422,63 @@
         syncPlayerBar();
         syncNowPlaying();
         return;
+      case "set-crossfade": {
+        const seconds = [2, 4, 8].includes(Number(actionEl.dataset.value))
+          ? Number(actionEl.dataset.value)
+          : 0;
+        await L.setSetting("crossfadeSeconds", seconds);
+        syncSettingsControls();
+        toast(
+          seconds
+            ? "Transisi lagu: " + seconds + " detik. Efek terdengar di akhir lagu yang sedang diputar."
+            : "Transisi lagu dimatikan."
+        );
+        return;
+      }
+      case "set-eq": {
+        const enableEq = actionEl.dataset.value === "true";
+        await L.setSetting("eqEnabled", enableEq);
+        if (enableEq && AM.AudioLab) AM.AudioLab.activate();
+        if (AM.AudioLab) AM.AudioLab.applySettings();
+        syncSettingsControls();
+        return;
+      }
+      case "set-eq-preset": {
+        const preset = String(actionEl.dataset.value || "datar");
+        await L.setSetting("eqPreset", preset);
+        if (AM.AudioLab && AM.AudioLab.PRESETS[preset]) {
+          await L.setSetting("eqGains", AM.AudioLab.PRESETS[preset].slice());
+        }
+        if (AM.AudioLab) AM.AudioLab.applySettings();
+        syncSettingsControls();
+        return;
+      }
+      case "set-mono": {
+        await L.setSetting("monoAudio", actionEl.dataset.value === "true");
+        if (AM.AudioLab) AM.AudioLab.applySettings();
+        syncSettingsControls();
+        return;
+      }
+      case "set-comp": {
+        await L.setSetting("compressor", actionEl.dataset.value === "true");
+        if (AM.AudioLab) AM.AudioLab.applySettings();
+        syncSettingsControls();
+        return;
+      }
+      case "set-speed": {
+        const speed = Number(actionEl.dataset.value) || 1;
+        P.setPlaybackSpeed(speed);
+        syncSettingsControls();
+        toast(speed === 1 ? "Kecepatan putar: normal." : "Kecepatan putar: " + String(speed).replace(".", ",") + "×.");
+        return;
+      }
+      case "set-pitch": {
+        P.setPreservePitch(actionEl.dataset.value === "true");
+        syncSettingsControls();
+        return;
+      }
+      case "settings-open":
+        return openSettingsSection(actionEl);
       case "settings-import":
         closeSettingsForAction(() => openImportDialog());
         return;
@@ -4116,31 +4181,143 @@
      Pengaturan
      ------------------------------------------------------------------------ */
 
-  function settingsHTML() {
-    const theme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
-    const shuffle = P.state.shuffle;
-    const repeat = P.state.repeat;
-    const streamQuality = L.getSetting("streamQuality", "high");
-    const downloadQuality = L.getSetting("downloadQuality", "best");
-    const statsForNerds = !!L.getSetting("statsForNerds", false);
+  /* ------------------------------------------------------------------------
+     Struktur halaman Pengaturan — hub kategori + halaman detail per kategori.
+     Setiap kategori punya ikon, deskripsi, dan ringkasan state terkini.
+     Barisnya tetap memakai markup .settings-row dan aksi yang sama agar
+     seluruh logika pengaturan lama tidak berubah.
+     ------------------------------------------------------------------------ */
+
+  const SETTINGS_SECTIONS = [
+    {
+      id: "tampilan",
+      icon: "sun",
+      title: "Tampilan",
+      desc: "Tema dan tampilan antarmuka.",
+      summary: function () {
+        return document.documentElement.getAttribute("data-theme") === "light" ? "Terang" : "Gelap";
+      }
+    },
+    {
+      id: "pemutaran",
+      icon: "shuffle",
+      title: "Pemutaran",
+      desc: "Acak, ulangi, dan timer tidur.",
+      summary: function () {
+        return (
+          "Acak: " +
+          (P.state.shuffle ? "Aktif" : "Mati") +
+          " · Ulangi: " +
+          (P.state.repeat === "one" ? "Satu" : P.state.repeat === "all" ? "Semua" : "Mati")
+        );
+      }
+    },
+    {
+      id: "audio",
+      icon: "speaker",
+      title: "Audio",
+      desc: "Kualitas streaming dan unduhan (Tracks, cadangan YouTube).",
+      summary: function () {
+        const stream = STREAM_FORMATS.find(function (item) {
+          return item.id === L.getSetting("streamQuality", "high");
+        });
+        const download = DOWNLOAD_QUALITIES.find(function (item) {
+          return item.id === L.getSetting("downloadQuality", "best");
+        });
+        return "Streaming: " + (stream ? stream.label : "Tinggi") + " · Unduhan: " + (download ? download.label : "Terbaik");
+      }
+    },
+    {
+      id: "audiolab",
+      icon: "sliders",
+      title: "Audio Lab",
+      desc: "Equalizer, efek audio, transisi lagu, dan kecepatan.",
+      summary: function () {
+        const eq = L.getSetting("eqEnabled", false)
+          ? audioLabPresetLabel(String(L.getSetting("eqPreset", "datar")))
+          : "Mati";
+        const fade = Number(L.getSetting("crossfadeSeconds", 0)) || 0;
+        return "EQ: " + eq + " · Transisi: " + (fade ? fade + " dtk" : "Mati");
+      }
+    },
+    {
+      id: "data",
+      icon: "folder",
+      title: "Perpustakaan & Penyimpanan",
+      desc: "Impor musik, penyimpanan lokal, dan data.",
+      summary: function () {
+        const count = L.state.tracks.length;
+        if (!count) return "Belum ada musik";
+        return count + " lagu · " + U.fmtBytes(L.totalSize());
+      }
+    },
+    {
+      id: "tentang",
+      icon: "info",
+      title: "Tentang",
+      desc: "Pintasan, kredit, dan informasi aplikasi.",
+      summary: function () {
+        return "Pintasan keyboard · kredit open source";
+      }
+    }
+  ];
+
+  function settingsSectionMeta(section) {
     return (
-      '<div class="settings">' +
-      '<section class="settings-group"><h3 class="settings-group__title">Tampilan</h3>' +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Tema</div><div class="settings-row__sub">Mode gelap memakai hitam murni untuk layar AMOLED.</div></div>' +
+      SETTINGS_SECTIONS.find(function (item) {
+        return item.id === section;
+      }) || null
+    );
+  }
+
+  // Indeks pencarian pengaturan individual. `focus` adalah nilai
+  // data-setting pada baris tujuan; `keywords` membantu pencocokan longgar.
+  const SETTINGS_INDEX = [
+    { id: "theme", label: "Tema", section: "tampilan", keywords: "tema tampilan mode gelap terang amoled dark light" },
+    { id: "shuffle", label: "Acak", section: "pemutaran", keywords: "acak shuffle random urutan antrean" },
+    { id: "repeat", label: "Ulangi", section: "pemutaran", keywords: "ulangi repeat loop semua satu" },
+    { id: "sleep", label: "Timer tidur", section: "pemutaran", keywords: "timer tidur sleep otomatis berhenti" },
+    { id: "stream", label: "Format streaming", section: "audio", keywords: "streaming kualitas bitrate opus aac flac lossless monochrome tracks" },
+    { id: "stats", label: "Stats for nerds", section: "audio", keywords: "stats info detail format audio now playing" },
+    { id: "download", label: "Kualitas unduhan", section: "audio", keywords: "unduhan download kualitas flac lossless" },
+    { id: "crossfade", label: "Transisi lagu", section: "audiolab", keywords: "transisi crossfade fade mulus perpindahan antar lagu" },
+    { id: "eq", label: "Equalizer", section: "audiolab", keywords: "equalizer eq sepuluh band 10 pita bass treble frekuensi koreksi suara" },
+    { id: "eqpreset", label: "Preset equalizer", section: "audiolab", keywords: "preset equalizer bass vokal elektronik akustik rock datar" },
+    { id: "eqband", label: "Kurva equalizer", section: "audiolab", keywords: "kurva pita db desibel slider 31hz 62hz 125hz 250hz 500hz 1khz 2khz 4khz 8khz 16khz" },
+    { id: "mono", label: "Mono audio", section: "audiolab", keywords: "mono satu kanal speaker headset" },
+    { id: "comp", label: "Kompresor dinamis", section: "audiolab", keywords: "kompresor compressor meratakan volume keras pelan dinamika" },
+    { id: "speed", label: "Kecepatan putar", section: "audiolab", keywords: "kecepatan speed tempo lambat cepat 1x 2x putaran" },
+    { id: "pitch", label: "Pertahankan nada", section: "audiolab", keywords: "pitch nada chipmunk preservesPitch tempo nada asli" },
+    { id: "import", label: "Impor musik", section: "data", keywords: "impor musik file upload mp3 m4a flac wav ogg" },
+    { id: "demo", label: "Perpustakaan demo", section: "data", keywords: "demo contoh lagu percobaan" },
+    { id: "storage", label: "Penyimpanan", section: "data", keywords: "penyimpanan storage kuota indexeddb memori data" },
+    { id: "clear", label: "Hapus semua data", section: "data", keywords: "hapus semua data reset bersihkan" },
+    { id: "shortcuts", label: "Pintasan keyboard", section: "tentang", keywords: "pintasan keyboard shortcut bantuan" }
+  ];
+
+  function settingsThemeRow() {
+    const theme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    return (
+      '<div class="settings-row" data-setting="theme"><div class="settings-row__text"><div class="settings-row__title">Tema</div><div class="settings-row__sub">Mode gelap memakai hitam murni untuk layar AMOLED.</div></div>' +
       '<div class="settings-row__action"><div class="segmented">' +
       '<button class="segmented__btn' +
       (theme === "dark" ? " is-active" : "") +
       '" type="button" data-action="set-theme" data-theme="dark">' +
       icon("moon") +
-      "AMOLED</button>" +
+      "Gelap</button>" +
       '<button class="segmented__btn' +
       (theme === "light" ? " is-active" : "") +
       '" type="button" data-action="set-theme" data-theme="light">' +
       icon("sun") +
       "Terang</button>" +
-      "</div></div></div></section>" +
-      '<section class="settings-group"><h3 class="settings-group__title">Pemutaran</h3>' +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Acak</div><div class="settings-row__sub">Putar antrean dalam urutan acak.</div></div>' +
+      "</div></div></div>"
+    );
+  }
+
+  function settingsShuffleRow() {
+    const shuffle = P.state.shuffle;
+    return (
+      '<div class="settings-row" data-setting="shuffle"><div class="settings-row__text"><div class="settings-row__title">Acak</div><div class="settings-row__sub">Putar antrean dalam urutan acak.</div></div>' +
       '<div class="settings-row__action"><div class="segmented">' +
       '<button class="segmented__btn' +
       (!shuffle ? " is-active" : "") +
@@ -4148,8 +4325,14 @@
       '<button class="segmented__btn' +
       (shuffle ? " is-active" : "") +
       '" type="button" data-action="set-shuffle" data-value="true">Aktif</button>' +
-      "</div></div></div>" +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Ulangi</div><div class="settings-row__sub">Ulangi semua lagu atau satu lagu.</div></div>' +
+      "</div></div></div>"
+    );
+  }
+
+  function settingsRepeatRow() {
+    const repeat = P.state.repeat;
+    return (
+      '<div class="settings-row" data-setting="repeat"><div class="settings-row__text"><div class="settings-row__title">Ulangi</div><div class="settings-row__sub">Ulangi semua lagu atau satu lagu.</div></div>' +
       '<div class="settings-row__action"><div class="segmented">' +
       '<button class="segmented__btn' +
       (repeat === "off" ? " is-active" : "") +
@@ -4160,17 +4343,33 @@
       '<button class="segmented__btn' +
       (repeat === "one" ? " is-active" : "") +
       '" type="button" data-action="set-repeat" data-value="one">Satu</button>' +
-      "</div></div></div>" +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Timer tidur</div><div class="settings-row__sub" id="settingsSleepText">Nonaktif — pemutaran berhenti mengikuti pilihanmu.</div></div>' +
+      "</div></div></div>"
+    );
+  }
+
+  function settingsSleepRow() {
+    return (
+      '<div class="settings-row" data-setting="sleep"><div class="settings-row__text"><div class="settings-row__title">Timer tidur</div><div class="settings-row__sub" id="settingsSleepText">Nonaktif — pemutaran berhenti mengikuti pilihanmu.</div></div>' +
       '<div class="settings-row__action"><button class="btn btn--secondary btn--small" type="button" data-action="sleep-menu">' +
       icon("moon") +
-      "Atur</button></div></div></section>" +
-      '<section class="settings-group"><h3 class="settings-group__title">Audio</h3>' +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Format streaming</div><div class="settings-row__sub">Hemat = OPUS 70 kbps · Standar = OPUS 160 kbps · Tinggi = hingga 256 kbps (AAC/OPUS) · FLAC = lossless dari katalog Tracks (monochrome.st) bila lagunya tersedia; jika tidak, otomatis turun ke audio YouTube terbaik. Format yang benar-benar dipakai selalu tampil di pemutar.</div></div>' +
+      "Atur</button></div></div>"
+    );
+  }
+
+  function settingsStreamRow() {
+    const streamQuality = L.getSetting("streamQuality", "high");
+    return (
+      '<div class="settings-row" data-setting="stream"><div class="settings-row__text"><div class="settings-row__title">Format streaming</div><div class="settings-row__sub">Hemat = OPUS 70 kbps · Standar = OPUS 160 kbps · Tinggi = hingga 256 kbps (AAC/OPUS) · FLAC = lossless dari katalog Tracks (monochrome.st) bila lagunya tersedia; jika tidak, otomatis turun ke audio YouTube terbaik. Format yang benar-benar dipakai selalu tampil di pemutar.</div></div>' +
       '<div class="settings-row__action">' +
       qualitySegmented("set-stream-quality", streamQuality, "", STREAM_FORMATS) +
-      "</div></div>" +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Stats for nerds</div><div class="settings-row__sub">Tampilkan baris detail kecil di bawah judul pada tampilan Now Playing. Klik chip format di pemutar untuk membuka panel info lengkap.</div></div>' +
+      "</div></div>"
+    );
+  }
+
+  function settingsStatsRow() {
+    const statsForNerds = !!L.getSetting("statsForNerds", false);
+    return (
+      '<div class="settings-row" data-setting="stats"><div class="settings-row__text"><div class="settings-row__title">Stats for nerds</div><div class="settings-row__sub">Tampilkan baris detail kecil di bawah judul pada tampilan Now Playing. Klik chip format di pemutar untuk membuka panel info lengkap.</div></div>' +
       '<div class="settings-row__action"><div class="segmented">' +
       '<button class="segmented__btn' +
       (statsForNerds ? "" : " is-active") +
@@ -4178,38 +4377,411 @@
       '<button class="segmented__btn' +
       (statsForNerds ? " is-active" : "") +
       '" type="button" data-action="set-stats" data-value="true">Aktif</button>' +
-      "</div></div></div>" +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Kualitas unduhan</div><div class="settings-row__sub">Unduhan berjalan langsung di browser, tanpa server lokal maupun ffmpeg. Pilih <strong>FLAC</strong> untuk mengambil versi lossless dari katalog Tracks; bila lagunya tidak tersedia, audio terbaik YouTube yang diunduh. Pilihan lain mengunduh audio sumber YouTube (OPUS/AAC).</div></div>' +
+      "</div></div></div>"
+    );
+  }
+
+  function settingsDownloadRow() {
+    const downloadQuality = L.getSetting("downloadQuality", "best");
+    return (
+      '<div class="settings-row" data-setting="download"><div class="settings-row__text"><div class="settings-row__title">Kualitas unduhan</div><div class="settings-row__sub">Unduhan berjalan langsung di browser, tanpa server lokal maupun ffmpeg. Pilih <strong>FLAC</strong> untuk mengambil versi lossless dari katalog Tracks; bila lagunya tidak tersedia, audio terbaik YouTube yang diunduh. Pilihan lain mengunduh audio sumber YouTube (OPUS/AAC).</div></div>' +
       '<div class="settings-row__action">' +
       qualitySegmented("set-download-quality", downloadQuality) +
-      "</div></div></section>" +
-      '<section class="settings-group"><h3 class="settings-group__title">Data</h3>' +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Impor musik</div><div class="settings-row__sub">MP3, M4A, FLAC, WAV, OGG, dan format audio lain yang didukung browser.</div></div>' +
+      "</div></div>"
+    );
+  }
+
+  function settingsImportRow() {
+    return (
+      '<div class="settings-row" data-setting="import"><div class="settings-row__text"><div class="settings-row__title">Impor musik</div><div class="settings-row__sub">MP3, M4A, FLAC, WAV, OGG, dan format audio lain yang didukung browser.</div></div>' +
       '<div class="settings-row__action"><button class="btn btn--secondary btn--small" type="button" data-action="settings-import">' +
       icon("upload") +
-      "Impor</button></div></div>" +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Perpustakaan demo</div><div class="settings-row__sub">Tambahkan 12 lagu contoh untuk mencoba semua fitur tanpa file pribadi.</div></div>' +
+      "Impor</button></div></div>"
+    );
+  }
+
+  function settingsDemoRow() {
+    return (
+      '<div class="settings-row" data-setting="demo"><div class="settings-row__text"><div class="settings-row__title">Perpustakaan demo</div><div class="settings-row__sub">Tambahkan 12 lagu contoh untuk mencoba semua fitur tanpa file pribadi.</div></div>' +
       '<div class="settings-row__action"><button class="btn btn--secondary btn--small" type="button" data-action="settings-demo">' +
       icon("sparkles") +
-      "Muat demo</button></div></div>" +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Penyimpanan</div>' +
+      "Muat demo</button></div></div>"
+    );
+  }
+
+  function settingsStorageRow() {
+    return (
+      '<div class="settings-row" data-setting="storage"><div class="settings-row__text"><div class="settings-row__title">Penyimpanan</div>' +
       '<div class="settings-row__sub" id="settingsStorageText">' +
       storageSummaryText() +
       '</div><div class="storage-line"><div class="storage-bar"><span id="settingsStorageBar" style="width:0%"></span></div></div></div>' +
       '<div class="settings-row__action"><span class="settings-row__sub">' +
       (L.state.storage === "indexeddb" ? "IndexedDB" : "Memori") +
-      "</span></div></div>" +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Hapus semua data</div><div class="settings-row__sub">Menghapus seluruh lagu, sampul, dan playlist dari aplikasi. File asli tidak terhapus.</div></div>' +
-      '<div class="settings-row__action"><button class="btn btn--danger btn--small" type="button" data-action="settings-clear">Hapus</button></div></div>' +
-      "</section>" +
-      '<section class="settings-group"><h3 class="settings-group__title">Tentang</h3>' +
-      '<div class="settings-row"><div class="settings-row__text"><div class="settings-row__title">Vinyl</div><div class="settings-row__sub">Pemutar musik streaming bergaya semi-Apple Music di browser. Tanpa pemasangan dan tanpa akun, lengkap dengan FLAC lossless dan unduhan langsung dari browser.</div></div>' +
+      "</span></div></div>"
+    );
+  }
+
+  function settingsClearRow() {
+    return (
+      '<div class="settings-row" data-setting="clear"><div class="settings-row__text"><div class="settings-row__title">Hapus semua data</div><div class="settings-row__sub">Menghapus seluruh lagu, sampul, dan playlist dari aplikasi. File asli tidak terhapus.</div></div>' +
+      '<div class="settings-row__action"><button class="btn btn--danger btn--small" type="button" data-action="settings-clear">Hapus</button></div></div>'
+    );
+  }
+
+  /* -- Audio Lab ------------------------------------------------------------ */
+
+  const EQ_PRESET_LABELS = {
+    datar: "Datar",
+    bass: "Bass",
+    vokal: "Vokal",
+    elektronik: "Elektronik",
+    akustik: "Akustik",
+    rock: "Rock"
+  };
+
+  function audioLabPresetLabel(id) {
+    return EQ_PRESET_LABELS[id] || "Datar";
+  }
+
+  function fmtDb(value) {
+    // Tanpa satuan: kolom fader sempit (10 pita), satuan dijelaskan di
+    // deskripsi baris ("−12 hingga +12 dB").
+    const number = Math.round(Number(value) * 2) / 2;
+    return (number > 0 ? "+" : "") + String(number).replace(".", ",");
+  }
+
+  function settingsAudioLabRows() {
+    const eqEnabled = !!L.getSetting("eqEnabled", false);
+    const eqPreset = String(L.getSetting("eqPreset", "datar"));
+    const gains = AM.AudioLab ? AM.AudioLab.eqGains() : [0, 0, 0, 0, 0];
+    const speed = Number(L.getSetting("playbackSpeed", 1)) || 1;
+    const pitch = L.getSetting("preservePitch", true) !== false;
+    const cf = Number(L.getSetting("crossfadeSeconds", 0)) || 0;
+
+    const bands = AM.AudioLab
+      ? AM.AudioLab.BANDS.map(function (band, index) {
+          return (
+            '<label class="eq-band">' +
+            '<span class="eq-band__label">' +
+            band.label +
+            "</span>" +
+            '<input class="eq-band__range" type="range" min="-12" max="12" step="0.5" value="' +
+            gains[index] +
+            '" data-band="' +
+            index +
+            '"' +
+            ' orient="vertical"' +
+            (eqEnabled ? "" : " disabled") +
+            ' aria-label="Pita ' +
+            band.label +
+            '">' +
+            '<span class="eq-band__value">' +
+            fmtDb(gains[index]) +
+            "</span>" +
+            "</label>"
+          );
+        }).join("")
+      : "";
+
+    return (
+      '<div class="settings-row" data-setting="crossfade"><div class="settings-row__text"><div class="settings-row__title">Transisi lagu</div><div class="settings-row__sub">Volume meluncur turun di akhir lagu lalu naik perlahan di awal lagu berikutnya, jadi perpindahan antar lagu terasa mulus. Bekerja di semua sumber, termasuk FLAC dan YouTube.</div></div>' +
+      '<div class="settings-row__action"><div class="segmented">' +
+      [0, 2, 4, 8].map(function (value) {
+        return (
+          '<button class="segmented__btn' +
+          (cf === value ? " is-active" : "") +
+          '" type="button" data-action="set-crossfade" data-value="' +
+          value +
+          '">' +
+          (value ? value + " dtk" : "Mati") +
+          "</button>"
+        );
+      }).join("") +
+      "</div></div></div>" +
+      '<div class="settings-row" data-setting="eq"><div class="settings-row__text"><div class="settings-row__title">Equalizer</div><div class="settings-row__sub">Koreksi sepuluh pita frekuensi (31 Hz – 16 kHz) lewat Web Audio. Berlaku untuk lagu yang diputar lewat server Vinyl atau file lokal; FLAC dari katalog diputar langsung tanpa pemrosesan.</div></div>' +
+      '<div class="settings-row__action"><div class="segmented">' +
+      '<button class="segmented__btn' + (eqEnabled ? "" : " is-active") + '" type="button" data-action="set-eq" data-value="false">Mati</button>' +
+      '<button class="segmented__btn' + (eqEnabled ? " is-active" : "") + '" type="button" data-action="set-eq" data-value="true">Aktif</button>' +
+      "</div></div></div>" +
+      '<div class="settings-row" data-setting="eqpreset"><div class="settings-row__text"><div class="settings-row__title">Preset equalizer</div><div class="settings-row__sub">Titik awal kurva; kamu bisa menyetel tiap pita lewat slider di bawah.</div></div>' +
+      '<div class="settings-row__action"><div class="segmented">' +
+      Object.keys(EQ_PRESET_LABELS).map(function (key) {
+        return (
+          '<button class="segmented__btn' +
+          (eqPreset === key ? " is-active" : "") +
+          '" type="button" data-action="set-eq-preset" data-value="' +
+          key +
+          '"' +
+          (eqEnabled ? "" : " disabled") +
+          ">" +
+          EQ_PRESET_LABELS[key] +
+          "</button>"
+        );
+      }).join("") +
+      "</div></div></div>" +
+      '<div class="settings-row settings-row--stack" data-setting="eqband"><div class="settings-row__text"><div class="settings-row__title">Kurva equalizer</div><div class="settings-row__sub">Geser tiap pita dari −12 hingga +12 dB. Perubahan terdengar langsung.</div></div>' +
+      '<div class="eq-bands">' +
+      bands +
+      "</div></div>" +
+      '<div class="settings-row" data-setting="mono"><div class="settings-row__text"><div class="settings-row__title">Mono audio</div><div class="settings-row__sub">Gabungkan kanal kiri dan kanan menjadi satu — berguna dengan satu speaker atau headset tengah.</div></div>' +
+      '<div class="settings-row__action"><div class="segmented">' +
+      '<button class="segmented__btn' + (!L.getSetting("monoAudio", false) ? " is-active" : "") + '" type="button" data-action="set-mono" data-value="false">Mati</button>' +
+      '<button class="segmented__btn' + (L.getSetting("monoAudio", false) ? " is-active" : "") + '" type="button" data-action="set-mono" data-value="true">Aktif</button>' +
+      "</div></div></div>" +
+      '<div class="settings-row" data-setting="comp"><div class="settings-row__text"><div class="settings-row__title">Kompresor dinamis</div><div class="settings-row__sub">Meratakan bagian paling keras dan paling pelan, nyaman untuk dengarkan di lingkungan bising.</div></div>' +
+      '<div class="settings-row__action"><div class="segmented">' +
+      '<button class="segmented__btn' + (!L.getSetting("compressor", false) ? " is-active" : "") + '" type="button" data-action="set-comp" data-value="false">Mati</button>' +
+      '<button class="segmented__btn' + (L.getSetting("compressor", false) ? " is-active" : "") + '" type="button" data-action="set-comp" data-value="true">Aktif</button>' +
+      "</div></div></div>" +
+      '<div class="settings-row" data-setting="speed"><div class="settings-row__text"><div class="settings-row__title">Kecepatan putar</div><div class="settings-row__sub">Ubah tempo pemutaran; pilihan tersimpan untuk semua lagu berikutnya.</div></div>' +
+      '<div class="settings-row__action"><div class="segmented">' +
+      [0.75, 1, 1.25, 1.5, 2].map(function (value) {
+        const label = value === 1 ? "Normal" : String(value).replace(".", ",") + "×";
+        return (
+          '<button class="segmented__btn' +
+          (speed === value ? " is-active" : "") +
+          '" type="button" data-action="set-speed" data-value="' +
+          value +
+          '">' +
+          label +
+          "</button>"
+        );
+      }).join("") +
+      "</div></div></div>" +
+      '<div class="settings-row" data-setting="pitch"><div class="settings-row__text"><div class="settings-row__title">Pertahankan nada</div><div class="settings-row__sub">Saat kecepatan diubah, nada tetap seperti aslinya. Berlaku di pemutar elemen audio; pemutar YouTube IFrame selalu mempertahankan nada.</div></div>' +
+      '<div class="settings-row__action"><div class="segmented">' +
+      '<button class="segmented__btn' + (!pitch ? " is-active" : "") + '" type="button" data-action="set-pitch" data-value="false">Mati</button>' +
+      '<button class="segmented__btn' + (pitch ? " is-active" : "") + '" type="button" data-action="set-pitch" data-value="true">Aktif</button>' +
+      "</div></div></div>" +
+      '<div class="settings-row" data-setting="graphstatus"><div class="settings-row__text"><div class="settings-row__title">Status pemrosesan</div><div class="settings-row__sub" id="audioLabStatus">' +
+      (AM.AudioLab ? AM.AudioLab.statusText() : "") +
+      "</div></div></div>"
+    );
+  }
+
+  function settingsAboutHTML() {    return (
+      '<div class="settings-row" data-setting="shortcuts"><div class="settings-row__text"><div class="settings-row__title">Vinyl</div><div class="settings-row__sub">Pemutar musik streaming bergaya semi-Apple Music di browser. Tanpa pemasangan dan tanpa akun, lengkap dengan FLAC lossless dan unduhan langsung dari browser.</div></div>' +
       '<div class="settings-row__action"><button class="text-btn" type="button" data-action="settings-shortcuts">Pintasan</button></div></div>' +
       '<p class="about-line">Dibuat dengan HTML, CSS, dan JavaScript murni, ditambah fungsi serverless untuk pencarian dan streaming. <strong>Space</strong> putar/jeda · <strong>←/→</strong> geser 5 detik · <strong>⌘K/Ctrl K</strong> cari · <strong>M</strong> bisukan · <strong>Q</strong> antrean.</p>' +
       '<p class="about-line">Terima kasih untuk proyek open source dan layanan yang membuat Vinyl mungkin. <a href="https://github.com/ZakiMisuchaAndefi/Vinyl#terima-kasih--kredit" target="_blank" rel="noopener noreferrer">Lihat kredit lengkap</a>.</p>' +
-      "</section>" +
+      '<div class="settings-profile" data-setting="social">' +
+      '<img class="settings-profile__avatar" src="assets/dev-avatar.jpg" alt="Foto profil Instagram @zzkyand__" width="64" height="64">' +
+      '<div class="settings-profile__body">' +
+      '<span class="settings-profile__name">@zzkyand__</span>' +
+      '<span class="settings-profile__role">Pengembang Vinyl</span>' +
+      '<div class="settings-profile__links">' +
+      '<a class="text-btn settings-social__link" href="https://www.instagram.com/zzkyand__/" target="_blank" rel="noopener noreferrer" aria-label="Instagram pengembang: zzkyand__">' +
+      icon("instagram") +
+      "Instagram</a>" +
+      '<a class="text-btn settings-social__link" href="https://github.com/ZakiMisuchaAndefi" target="_blank" rel="noopener noreferrer" aria-label="GitHub pengembang: ZakiMisuchaAndefi">' +
+      icon("github") +
+      "GitHub</a>" +
+      "</div>" +
+      "</div>" +
       "</div>"
     );
+  }
+
+  function settingsRowsFor(section) {
+    switch (section) {
+      case "tampilan":
+        return settingsThemeRow();
+      case "pemutaran":
+        return settingsShuffleRow() + settingsRepeatRow() + settingsSleepRow();
+      case "audio":
+        return settingsStreamRow() + settingsStatsRow() + settingsDownloadRow();
+      case "audiolab":
+        return settingsAudioLabRows();
+      case "data":
+        return settingsImportRow() + settingsDemoRow() + settingsStorageRow() + settingsClearRow();
+      case "tentang":
+        return settingsAboutHTML();
+      default:
+        return "";
+    }
+  }
+
+  function settingsHTML(section) {
+    if (settingsSectionMeta(section)) {
+      return (
+        '<div class="settings-detail" id="settingsRoot">' +
+        '<section class="settings-group">' +
+        settingsRowsFor(section) +
+        "</section></div>"
+      );
+    }
+    return settingsHubHTML();
+  }
+
+  function settingsHubHTML() {
+    return (
+      '<div class="settings-hub" id="settingsRoot">' +
+      '<div class="search-box" role="search">' +
+      icon("search") +
+      '<input class="search-box__input" type="search" data-role="settings-search" autocomplete="off" spellcheck="false" placeholder="Cari pengaturan" aria-label="Cari pengaturan">' +
+      "</div>" +
+      settingsSuggestHTML() +
+      '<div class="settings-search-results" id="settingsSearchResults" hidden></div>' +
+      '<div class="settings-grid" id="settingsGrid">' +
+      SETTINGS_SECTIONS.map(function (meta) {
+        return (
+          '<button class="settings-card" type="button" data-action="settings-open" data-section="' +
+          meta.id +
+          '" aria-label="Buka pengaturan ' +
+          meta.title +
+          '">' +
+          '<span class="settings-card__icon" aria-hidden="true">' +
+          icon(meta.icon) +
+          "</span>" +
+          '<span class="settings-card__body">' +
+          '<span class="settings-card__name">' +
+          meta.title +
+          "</span>" +
+          '<span class="settings-card__desc">' +
+          meta.desc +
+          "</span>" +
+          '<span class="settings-card__summary">' +
+          meta.summary() +
+          "</span>" +
+          "</span>" +
+          '<span class="settings-card__chev" aria-hidden="true">' +
+          icon("chevron-right") +
+          "</span>" +
+          "</button>"
+        );
+      }).join("") +
+      "</div></div>"
+    );
+  }
+
+  function suggestedSetting() {
+    const timer = P.getSleepTimer ? P.getSleepTimer() : null;
+    if (timer && timer.mode !== "off") {
+      // Timer sedang aktif — arahkan pengguna ke kualitas lossless.
+      return { icon: "speaker", label: "Aktifkan FLAC lossless", section: "audio", focus: "stream" };
+    }
+    return { icon: "clock", label: "Atur Timer tidur", section: "pemutaran", focus: "sleep" };
+  }
+
+  function settingsSuggestHTML() {
+    const item = suggestedSetting();
+    const meta = settingsSectionMeta(item.section);
+    return (
+      '<button class="settings-suggest" type="button" data-action="settings-open" data-section="' +
+      item.section +
+      '" data-focus="' +
+      item.focus +
+      '">' +
+      '<span class="settings-suggest__icon" aria-hidden="true">' +
+      icon(item.icon) +
+      "</span>" +
+      '<span class="settings-suggest__text">' +
+      '<span class="settings-suggest__eyebrow">Disarankan</span>' +
+      '<span class="settings-suggest__title">' +
+      item.label +
+      "</span>" +
+      '<span class="settings-suggest__crumb">Pengaturan › ' +
+      (meta ? meta.title : "") +
+      "</span>" +
+      "</span>" +
+      '<span class="settings-suggest__chev" aria-hidden="true">' +
+      icon("chevron-right") +
+      "</span>" +
+      "</button>"
+    );
+  }
+
+  function settingsSearchItemHTML(item) {
+    const meta = settingsSectionMeta(item.section);
+    return (
+      '<button class="settings-search-item" type="button" data-action="settings-open" data-section="' +
+      item.section +
+      '" data-focus="' +
+      item.id +
+      '">' +
+      '<span class="settings-search-item__label">' +
+      item.label +
+      "</span>" +
+      '<span class="settings-search-item__crumb">Pengaturan › ' +
+      (meta ? meta.title : "") +
+      "</span>" +
+      "</button>"
+    );
+  }
+
+  function updateSettingsSearch(root, rawQuery) {
+    if (!root) return;
+    const results = root.querySelector("#settingsSearchResults");
+    const grid = root.querySelector("#settingsGrid");
+    const suggest = root.querySelector(".settings-suggest");
+    if (!results) return;
+    const query = String(rawQuery || "").trim().toLowerCase();
+    if (!query) {
+      results.hidden = true;
+      results.innerHTML = "";
+      if (grid) grid.hidden = false;
+      if (suggest) suggest.hidden = false;
+      return;
+    }
+    const items = SETTINGS_INDEX.filter(function (item) {
+      const meta = settingsSectionMeta(item.section);
+      return (item.label + " " + item.keywords + " " + (meta ? meta.title : "")).toLowerCase().includes(query);
+    });
+    results.hidden = false;
+    if (grid) grid.hidden = true;
+    if (suggest) suggest.hidden = true;
+    results.innerHTML = items.length
+      ? items.map(settingsSearchItemHTML).join("")
+      : '<p class="settings-search-empty">Tidak ada pengaturan yang cocok.</p>';
+  }
+
+  function bindSettingsPage(root) {
+    if (!root) return;
+    const input = root.querySelector('[data-role="settings-search"]');
+    if (input) {
+      input.addEventListener("input", function () {
+        updateSettingsSearch(root, input.value);
+      });
+    }
+    // Slider kurva equalizer: terapkan langsung ke graf + simpan.
+    $$(".eq-band__range", root).forEach(function (slider) {
+      slider.addEventListener("input", function () {
+        const index = Number(slider.dataset.band) || 0;
+        const value = Number(slider.value) || 0;
+        const label = slider.parentElement.querySelector(".eq-band__value");
+        if (label) label.textContent = fmtDb(value);
+        const gains = AM.AudioLab ? AM.AudioLab.eqGains() : [0, 0, 0, 0, 0];
+        gains[index] = value;
+        L.setSetting("eqGains", gains);
+        if (AM.AudioLab) AM.AudioLab.setBand(index, value);
+      });
+    });
+  }
+
+  function openSettingsSection(actionEl) {
+    const section = actionEl.dataset.section || "";
+    state.settingsFocusTarget = actionEl.dataset.focus || "";
+    navigate("#/settings" + (section ? "/" + section : ""));
+  }
+
+  // Scroll ke pengaturan tujuan dan sorot sebentar. Dijeda agar tidak
+  // tertimpa scrollTop = 0 di akhir renderRoute.
+  function applySettingsFocusTarget() {
+    const id = state.settingsFocusTarget;
+    if (!id) return;
+    state.settingsFocusTarget = "";
+    const root = document.getElementById("settingsRoot");
+    if (!root) return;
+    const row = root.querySelector('[data-setting="' + cssEscape(id) + '"]');
+    if (!row) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.setTimeout(function () {
+      row.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
+      row.classList.add("is-highlight");
+      window.setTimeout(function () {
+        row.classList.remove("is-highlight");
+      }, 1900);
+    }, 60);
   }
 
   function storageSummaryText() {
@@ -4254,6 +4826,46 @@
     $$('[data-action="set-stats"]', root).forEach((button) => {
       button.classList.toggle("is-active", (button.dataset.value === "true") === statsForNerds);
     });
+    // Audio Lab: transisi, equalizer, efek, kecepatan.
+    const crossfade = Number(L.getSetting("crossfadeSeconds", 0)) || 0;
+    $$('[data-action="set-crossfade"]', root).forEach((button) => {
+      button.classList.toggle("is-active", Number(button.dataset.value) === crossfade);
+    });
+    const eqEnabled = !!L.getSetting("eqEnabled", false);
+    $$('[data-action="set-eq"]', root).forEach((button) => {
+      button.classList.toggle("is-active", (button.dataset.value === "true") === eqEnabled);
+    });
+    const eqPreset = String(L.getSetting("eqPreset", "datar"));
+    $$('[data-action="set-eq-preset"]', root).forEach((button) => {
+      button.classList.toggle("is-active", (button.dataset.value || "datar") === eqPreset);
+      button.disabled = !eqEnabled;
+    });
+    // Posisi fader kurva ikut preset terbaru (misal setelah klik preset).
+    const gains = AM.AudioLab ? AM.AudioLab.eqGains() : [];
+    $$(".eq-band__range", root).forEach((input) => {
+      const index = Number(input.dataset.band) || 0;
+      const value = gains[index] || 0;
+      input.value = value;
+      const label = input.parentElement.querySelector(".eq-band__value");
+      if (label) label.textContent = fmtDb(value);
+      input.disabled = !eqEnabled;
+    });
+    $$('[data-action="set-mono"]', root).forEach((button) => {
+      button.classList.toggle("is-active", (button.dataset.value === "true") === !!L.getSetting("monoAudio", false));
+    });
+    $$('[data-action="set-comp"]', root).forEach((button) => {
+      button.classList.toggle("is-active", (button.dataset.value === "true") === !!L.getSetting("compressor", false));
+    });
+    const speed = Number(L.getSetting("playbackSpeed", 1)) || 1;
+    $$('[data-action="set-speed"]', root).forEach((button) => {
+      button.classList.toggle("is-active", Number(button.dataset.value) === speed);
+    });
+    const pitch = L.getSetting("preservePitch", true) !== false;
+    $$('[data-action="set-pitch"]', root).forEach((button) => {
+      button.classList.toggle("is-active", (button.dataset.value === "true") === pitch);
+    });
+    const statusEl = document.getElementById("audioLabStatus");
+    if (statusEl && AM.AudioLab) statusEl.textContent = AM.AudioLab.statusText();
   }
 
   function qualityLabel(id) {
@@ -4478,10 +5090,11 @@
     return String(value).replace(/["\\]/g, "\\$&");
   }
 
-  // Halaman Pengaturan memakai markup yang sama dengan modal lama, agar
-  // kontrol tema/audio/data tetap satu sumber.
+  // Hub Pengaturan: render(section) untuk halaman detail/hub dan meta(id)
+  // untuk mencari judul + deskripsi kategori.
   AM.SettingsPage = {
-    render: settingsHTML
+    render: settingsHTML,
+    meta: settingsSectionMeta
   };
 
   // Hubungkan event perpustakaan setelah modul dimuat.
