@@ -96,6 +96,12 @@
   class MediaEngine {
     constructor(element) {
       this.element = element;
+      // Dua rute elemen (lihat audiolab.js): elemen asli tidak pernah
+      // menempel graf Web Audio (dipakai FLAC lintas-origin & bawaan);
+      // elemen kedua dibuat saat graf diminta dan selalu menempel graf.
+      this.directElement = element;
+      this.boundElements = new WeakSet();
+      this.preservesPitchValue = true;
       this.handlers = new Map();
 
       this.mode = "audio";
@@ -141,15 +147,30 @@
         "loadeddata"
       ];
 
-      types.forEach((type) => {
-        this.element.addEventListener(type, (event) => {
-          if (this.mode !== "audio") return;
-          if (type === "durationchange" || type === "loadedmetadata" || type === "loadeddata") {
-            const value = Number(this.element.duration);
-            if (Number.isFinite(value) && value > 0) this.lastDuration = value;
-          }
-          this.emit(type, event);
+      // Simpan handler per tipe agar elemen kedua bisa menempel listener
+      // yang sama tanpa risiko dobel.
+      if (!this.elementHandlers) {
+        this.elementHandlers = new Map();
+        types.forEach((type) => {
+          this.elementHandlers.set(
+            type,
+            (event) => {
+              if (this.mode !== "audio") return;
+              if (type === "durationchange" || type === "loadedmetadata" || type === "loadeddata") {
+                const value = Number(this.element.duration);
+                if (Number.isFinite(value) && value > 0) this.lastDuration = value;
+              }
+              this.emit(type, event);
+            }
+          );
         });
+      }
+
+      const element = this.element;
+      if (this.boundElements.has(element)) return;
+      this.boundElements.add(element);
+      this.elementHandlers.forEach((handler, type) => {
+        element.addEventListener(type, handler);
       });
     }
 
@@ -178,6 +199,54 @@
 
     /* ---------------------------------------------------------------- sumber */
 
+    // Elemen kedua untuk rute graf Web Audio. Dibuat sekali, tidak perlu
+    // di-DOM karena <audio> tetap memutar walau terlepas dari dokumen.
+    routedElement() {
+      if (this._routedElement) return this._routedElement;
+      const element = document.createElement("audio");
+      element.preload = "metadata";
+      element.setAttribute("data-vinyl-routed", "1");
+      this._routedElement = element;
+      return element;
+    }
+
+    // Tukar elemen aktif. Dipanggil AM.AudioLab.prepare() di antara lagu,
+    // sebelum audio.src disetel, jadi tidak ada pemutaran yang terpotong.
+    useRouted(routed) {
+      const target = routed ? this.routedElement() : this.directElement;
+      if (target === this.element) return this.element;
+
+      const previous = this.element;
+      try {
+        previous.pause();
+        previous.removeAttribute("src");
+        previous.load();
+      } catch (error) {
+        /* Abaikan. */
+      }
+
+      // Salin properti pemutaran ke elemen baru.
+      try {
+        target.volume = previous.volume;
+        target.muted = previous.muted;
+        target.playbackRate = previous.playbackRate || 1;
+      } catch (error) {
+        /* Abaikan. */
+      }
+      if (typeof target.webkitPreservesPitch !== "undefined") {
+        try {
+          target.webkitPreservesPitch = previous.webkitPreservesPitch;
+        } catch (error) {
+          /* Abaikan. */
+        }
+      }
+      target.preload = previous.preload || "metadata";
+
+      this.element = target;
+      this.bindElement();
+      return target;
+    }
+
     get src() {
       return this._src;
     }
@@ -194,6 +263,8 @@
       this.exitYoutube();
       this.mode = "audio";
       this.element.src = text;
+      this.applyElementRate();
+      this.applyPreservesPitch();
     }
 
     getAttribute(name) {
@@ -233,6 +304,44 @@
     load() {
       if (this.mode === "youtube") return;
       this.element.load();
+      // Chrome mengembalikan playbackRate ke defaultPlaybackRate saat
+      // berkas baru dimuat — pastikan kecepatan pilihan pengguna kembali.
+      this.applyElementRate();
+    }
+
+    // Terapkan kecepatan tersimpan ke elemen (mode audio).
+    applyElementRate() {
+      if (this.mode === "youtube" || this.rate === 1) return;
+      try {
+        this.element.defaultPlaybackRate = this.rate;
+        this.element.playbackRate = this.rate;
+      } catch (error) {
+        /* Abaikan. */
+      }
+    }
+
+    get preservesPitch() {
+      if (this.mode !== "youtube") {
+        if (typeof this.element.preservesPitch === "boolean") return this.element.preservesPitch;
+        return this.preservesPitchValue;
+      }
+      return this.preservesPitchValue;
+    }
+
+    set preservesPitch(value) {
+      this.preservesPitchValue = value !== false;
+      this.applyPreservesPitch();
+    }
+
+    applyPreservesPitch() {
+      if (this.mode === "youtube") return;
+      const value = this.preservesPitchValue;
+      try {
+        if ("preservesPitch" in this.element) this.element.preservesPitch = value;
+        if ("webkitPreservesPitch" in this.element) this.element.webkitPreservesPitch = value;
+      } catch (error) {
+        /* Abaikan. */
+      }
     }
 
     enterYoutube(rawId) {
@@ -371,6 +480,15 @@
     afterReady() {
       if (!this.playerReady || !this.player) return;
       this.applyVolume();
+
+      // Kecepatan yang disetel sebelum pemutar siap harus diterapkan.
+      if (this.rate !== 1) {
+        try {
+          this.player.setPlaybackRate(this.rate);
+        } catch (error) {
+          /* Abaikan. */
+        }
+      }
 
       if (this.pendingSeek != null) {
         const target = this.pendingSeek;
@@ -622,7 +740,12 @@
       const rate = Number(value) || 1;
       this.rate = rate;
       if (this.mode !== "youtube") {
-        this.element.playbackRate = rate;
+        try {
+          this.element.defaultPlaybackRate = rate;
+          this.element.playbackRate = rate;
+        } catch (error) {
+          /* Abaikan. */
+        }
         return;
       }
       if (this.playerReady && this.player) {

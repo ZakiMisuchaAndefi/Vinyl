@@ -38,12 +38,25 @@
     streamSource: "",
     losslessUrl: "",
     losslessMatch: null,
-    format: null
+    format: null,
+    // Audio Lab
+    playbackSpeed: 1,
+    preservePitch: true,
+    fadeInPending: false
   };
 
   const listeners = new Map();
   let settingsReady = false;
   let volumeSaveTimer = 0;
+
+  // Transisi lagu (fade out/in ala crossfade). Pola dan pengaman sama
+  // dengan fade timer tidur: volume digeser tanpa menimpa nilai yang
+  // disimpan, lalu dikembalikan setelah lagu berikutnya berbunyi.
+  const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
+  let fadeTimerId = 0;
+  let fadeInTimerId = 0;
+  let fadeSavedVolume = null;
+  let fadeAdvancing = false;
 
   const SNAPSHOT_KEY = "musik.playback.v1";
   let snapshotTimer = 0;
@@ -833,6 +846,9 @@
 
   function sleepDeadlineReached() {
     clearSleepTicker();
+    // Fade lagu yang berjalan harus berhenti dulu agar fade timer tidur
+    // mulai dari volume asli pengguna.
+    if (fadeTimerId || fadeInTimerId) cancelFade(true);
     if (state.isPlaying) startSleepFade();
     else finishSleep();
   }
@@ -866,6 +882,126 @@
     sleepMode = "off";
     sleepDeadline = 0;
     emitSleepTimer();
+  }
+
+  /* ------------------------------------------------------------------------
+     Audio Lab — transisi lagu, kecepatan, pertahankan nada
+     ------------------------------------------------------------------------ */
+
+  function clampSpeed(value) {
+    return SPEEDS.includes(value) ? value : 1;
+  }
+
+  function crossfadeSeconds() {
+    const value = Number(AM.Library.getSetting("crossfadeSeconds", 0));
+    return [2, 4, 8].includes(value) ? value : 0;
+  }
+
+  function setPlaybackSpeed(value) {
+    state.playbackSpeed = clampSpeed(Number(value));
+    audio.playbackRate = state.playbackSpeed;
+    AM.Library.setSetting("playbackSpeed", state.playbackSpeed);
+  }
+
+  function setPreservePitch(value) {
+    state.preservePitch = value !== false;
+    audio.preservesPitch = state.preservePitch;
+    AM.Library.setSetting("preservePitch", state.preservePitch);
+  }
+
+  function clearFadeTimers() {
+    if (fadeTimerId) {
+      window.clearInterval(fadeTimerId);
+      fadeTimerId = 0;
+    }
+    if (fadeInTimerId) {
+      window.clearInterval(fadeInTimerId);
+      fadeInTimerId = 0;
+    }
+  }
+
+  // Hentikan fade yang berjalan dan kembalikan volume pengguna bila diminta.
+  function cancelFade(restore) {
+    const wasAdvancing = fadeAdvancing;
+    clearFadeTimers();
+    fadeAdvancing = false;
+    if (restore && fadeSavedVolume != null) {
+      const volume = fadeSavedVolume;
+      fadeSavedVolume = null;
+      state.volume = U.clamp(volume, 0, 1);
+      applyVolume();
+      persistVolume();
+    } else if (!wasAdvancing) {
+      fadeSavedVolume = null;
+    }
+  }
+
+  // Fade-out di akhir lagu. Bila advance, antrean lanjut otomatis setelah
+  // volume mencapai nol dan lagu berikutnya fade-in.
+  function startFadeOut(advance) {
+    cancelFade(false);
+    const seconds = crossfadeSeconds();
+    if (seconds <= 0) return;
+    fadeAdvancing = !!advance;
+    fadeSavedVolume = state.volume;
+    const start = state.volume;
+    const steps = Math.max(8, seconds * 5);
+    let step = 0;
+    fadeTimerId = window.setInterval(() => {
+      step += 1;
+      if (step >= steps) {
+        window.clearInterval(fadeTimerId);
+        fadeTimerId = 0;
+        setVolume(0, { persist: false });
+        if (fadeAdvancing) {
+          state.fadeInPending = true;
+          next(false);
+        } else {
+          cancelFade(true);
+        }
+        return;
+      }
+      setVolume(start * (1 - step / steps), { persist: false });
+    }, 200);
+  }
+
+  // Fade-in di awal lagu berikutnya setelah fade-out otomatis.
+  function startFadeIn() {
+    const seconds = crossfadeSeconds();
+    const target = fadeSavedVolume != null ? U.clamp(fadeSavedVolume, 0, 1) : state.volume;
+    fadeSavedVolume = null;
+    fadeAdvancing = false;
+    if (seconds <= 0 || target <= 0) {
+      if (state.volume !== target) setVolume(target);
+      return;
+    }
+    setVolume(0, { persist: false });
+    const steps = Math.max(8, seconds * 5);
+    let step = 0;
+    fadeInTimerId = window.setInterval(() => {
+      step += 1;
+      if (fadeInTimerId && step >= steps) {
+        window.clearInterval(fadeInTimerId);
+        fadeInTimerId = 0;
+        setVolume(target);
+        return;
+      }
+      setVolume(target * (step / steps), { persist: false });
+    }, 200);
+  }
+
+  // Dipanggil dari timeupdate: mulai fade-out bila lagu hampir habis.
+  function tickCrossfade() {
+    if (fadeTimerId || fadeInTimerId || fadeAdvancing) return;
+    const seconds = crossfadeSeconds();
+    if (seconds <= 0) return;
+    if (sleepMode !== "off") return; // fade timer tidur yang mengurus
+    if (state.repeat === "one") return;
+    if (!state.isPlaying || state.seeking) return;
+    const duration = Number(state.duration) || 0;
+    if (duration < seconds * 2 + 3) return;
+    const remaining = duration - state.currentTime;
+    if (remaining <= seconds && remaining > 0.2) startFadeOut(true);
   }
 
   /* ------------------------------------------------------------------------
@@ -1237,6 +1373,9 @@
   }
 
   function reportPlayFailure(track, error) {
+    // Fade-in tidak boleh menyambut pemutaran yang gagal.
+    state.fadeInPending = false;
+    fadeAdvancing = false;
     if (error && error.name === "NotAllowedError") {
       emit("blocked", { track, error });
     } else if (!error || error.name !== "AbortError") {
@@ -1547,6 +1686,8 @@
       track.audioRetryCount = 0;
       track.audioRetrying = false;
       track.iframeTried = false;
+      // Pilih rute elemen (graf Web Audio atau langsung) untuk FLAC ini.
+      if (AM.AudioLab) AM.AudioLab.prepare(lossless.url);
       audio.src = lossless.url;
       audio.load();
       state.loadedTrackId = trackId;
@@ -1597,6 +1738,8 @@
       track.audioRetryCount = 0;
       track.audioRetrying = false;
       track.iframeTried = false;
+      // Pilih rute elemen untuk stream YouTube via server (same-origin).
+      if (AM.AudioLab) AM.AudioLab.prepare(streamUrl);
       audio.src = streamUrl;
       audio.load();
       state.loadedTrackId = trackId;
@@ -1631,6 +1774,9 @@
         state.loadingTrackId = null;
         state.pendingPlay = false;
       }
+      // Pemuatan gagal: bendera fade tidak boleh menggantung.
+      state.fadeInPending = false;
+      fadeAdvancing = false;
       emit("error", { track, error });
       state.isPlaying = false;
       state.pendingSeek = null;
@@ -1642,6 +1788,8 @@
     if (token !== state.loadToken || state.currentId !== trackId) return;
 
     state.streamSource = track.online ? "online" : "local";
+    // Pilih rute elemen untuk stream online/lokal.
+    if (AM.AudioLab) AM.AudioLab.prepare(url);
     audio.src = url;
     audio.load();
     state.loadedTrackId = trackId;
@@ -1688,6 +1836,9 @@
 
   function pause() {
     state.pendingPlay = false;
+    // Jeda manual menghentikan fade; volume dikembalikan agar jeda-tarik
+    // tidak meninggalkan volume rendah.
+    if (fadeTimerId || fadeInTimerId) cancelFade(true);
     audio.pause();
   }
 
@@ -1711,6 +1862,8 @@
   }
 
   function stop() {
+    cancelFade(true);
+    state.fadeInPending = false;
     audio.pause();
     audio.removeAttribute("src");
     audio.load();
@@ -1736,6 +1889,12 @@
 
   async function next(manual, stopAtEnd) {
     if (!state.queue.length) return;
+    // Lonjakan manual menghentikan fade; perpindahan otomatis dari
+    // fade-out sendiri tidak boleh membatalkan fade-nya.
+    if (manual) {
+      state.fadeInPending = false;
+      cancelFade(true);
+    }
     // Hanya tunggu radio bila benar-benar sudah di ujung antrean; lompat
     // lagu di tengah antrean tidak boleh tertahan proses latar belakang.
     if (state.cursor >= state.queue.length - 1 && state.radioPromise) {
@@ -1760,6 +1919,10 @@
       await loadCurrent(true);
       return;
     }
+    // Antrean berakhir: kembalikan volume yang diturunkan fade-out agar
+    // pemutaran berikutnya tidak mulai senyap.
+    state.fadeInPending = false;
+    cancelFade(true);
     pause();
     state.isPlaying = false;
     emit("statechange", getState());
@@ -1767,6 +1930,8 @@
 
   async function prev() {
     if (!state.currentId) return;
+    state.fadeInPending = false;
+    cancelFade(true);
     if (state.currentTime > 3.2) {
       seekTo(0);
       return;
@@ -1791,6 +1956,22 @@
   }
 
   function handleEnded() {
+    // Ramp fade-out sudah selesai dan memicu perpindahan sendiri: event
+    // 'ended' lagu lama sudah basi — jangan maju dua kali.
+    if (fadeAdvancing && !fadeTimerId) {
+      fadeAdvancing = false;
+      return;
+    }
+    // Fade-out yang belum selesai: hentikan ramp. Bila fade memang sedang
+    // menuju lagu berikutnya, tandai fade-in; kalau bukan, kembalikan volume.
+    if (fadeTimerId) {
+      window.clearInterval(fadeTimerId);
+      fadeTimerId = 0;
+      if (fadeAdvancing) state.fadeInPending = true;
+      else cancelFade(true);
+    }
+    if (fadeInTimerId) cancelFade(true);
+    fadeAdvancing = false;
     // Lagu pendek (< 30 detik) dicatat saat selesai, karena ambang 30 detik
     // tidak akan pernah tercapai.
     const track = currentTrack();
@@ -1810,6 +1991,10 @@
 
   function seekTo(seconds) {
     if (!Number.isFinite(seconds)) return;
+    // Geser manual menghentikan fade yang sedang berjalan.
+    if (fadeTimerId || fadeInTimerId) cancelFade(true);
+    state.fadeInPending = false;
+    fadeAdvancing = false;
     const max = Number.isFinite(state.duration) && state.duration > 0 ? state.duration : seconds;
     const value = U.clamp(seconds, 0, max);
     if (Number.isFinite(audio.duration) && audio.duration > 0) {
@@ -2061,7 +2246,11 @@
     state.shuffle = !!AM.Library.getSetting("shuffle", false);
     const repeat = AM.Library.getSetting("repeat", "off");
     state.repeat = ["off", "all", "one"].includes(repeat) ? repeat : "off";
+    state.playbackSpeed = clampSpeed(Number(AM.Library.getSetting("playbackSpeed", 1)));
+    state.preservePitch = AM.Library.getSetting("preservePitch", true) !== false;
     applyVolume();
+    audio.playbackRate = state.playbackSpeed;
+    audio.preservesPitch = state.preservePitch;
 
     audio.addEventListener("play", () => {
       state.pendingPlay = false;
@@ -2097,6 +2286,8 @@
       });
       writeSnapshot();
       if (state.currentTime >= 30) maybeRecordHistory();
+      // Transisi lagu: cek apakah lagu hampir habis dan fade harus mulai.
+      tickCrossfade();
     });
 
     audio.addEventListener("durationchange", () => {
@@ -2143,6 +2334,12 @@
       const token = state.loadToken;
       const trackId = state.currentId;
       refreshFormat(trackId, token).catch(() => {});
+      // Fade-in setelah perpindahan otomatis bermula di sini, saat lagu
+      // berikutnya benar-benar berbunyi.
+      if (state.fadeInPending) {
+        state.fadeInPending = false;
+        startFadeIn();
+      }
       emit("ready", {});
     });
 
@@ -2223,6 +2420,8 @@
     setVolume,
     setMuted,
     toggleMute,
+    setPlaybackSpeed,
+    setPreservePitch,
     getSleepTimer,
     setSleepTimer,
     cancelSleepTimer,

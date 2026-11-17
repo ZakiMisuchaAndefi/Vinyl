@@ -2186,15 +2186,28 @@
      Halaman: Pengaturan
      ------------------------------------------------------------------------ */
 
-  function settingsView() {
-    const body = AM.SettingsPage ? AM.SettingsPage.render() : "";
+  function settingsView(route) {
+    const section = route && route.params && route.params.section ? route.params.section : "";
+    const meta =
+      AM.SettingsPage && typeof AM.SettingsPage.meta === "function" ? AM.SettingsPage.meta(section) : null;
+    const body = AM.SettingsPage ? AM.SettingsPage.render(meta ? meta.id : "") : "";
+    const title = meta ? "Pengaturan · " + meta.title : "Pengaturan";
     return {
-      title: "Pengaturan",
+      title: title,
       html:
         '<div class="page page--panel page--settings">' +
         '<header class="settings-head">' +
-        '<h1 class="settings-head__title">Pengaturan</h1>' +
-        '<p class="settings-head__sub">Tampilan, pemutaran, audio, dan data perpustakaan dalam satu tempat.</p>' +
+        (meta
+          ? '<a class="settings-back" href="#/settings">' +
+            icon("chevron-left") +
+            "<span>Pengaturan</span></a>"
+          : "") +
+        '<h1 class="settings-head__title">' +
+        (meta ? meta.title : "Pengaturan") +
+        "</h1>" +
+        '<p class="settings-head__sub">' +
+        (meta ? meta.desc : "Tampilan, pemutaran, audio, dan data perpustakaan dalam satu tempat.") +
+        "</p>" +
         "</header>" +
         '<div class="settings-page" id="settingsRoot">' +
         body +

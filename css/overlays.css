@@ -615,6 +615,76 @@
   flex: none;
 }
 
+/* Kartu profil pengembang di bagian Tentang. */
+.settings-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px solid var(--divider);
+  border-radius: 14px;
+  background: var(--bg-input);
+}
+
+.settings-profile__avatar {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  background: var(--bg-hover);
+}
+
+.settings-profile__body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.settings-profile__name {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.settings-profile__role {
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+.settings-profile__links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.settings-social__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.settings-social__link .icon {
+  width: 17px;
+  height: 17px;
+}
+
+@media (max-width: 767px) {
+  .settings-profile {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .settings-profile__links {
+    margin-top: 2px;
+  }
+}
+
 .settings-kbd {
   display: inline-flex;
   align-items: center;
@@ -877,6 +947,11 @@
   background: var(--surface-hover);
 }
 
+/* Tombol yang tidak aktif tetap terbaca di kedua tema (kontras WCAG AA). */
+.page--settings .segmented__btn {
+  color: var(--ink-2);
+}
+
 .page--settings .segmented__btn.is-active {
   background: var(--pink-tint);
   color: var(--ink);
@@ -913,6 +988,496 @@
 
   .page--settings .settings-row__action .btn {
     width: 100%;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Pengaturan — hub kategori, kartu Disarankan, pencarian, halaman detail
+   -------------------------------------------------------------------------- */
+
+.settings-hub,
+.settings-detail {
+  display: grid;
+  gap: 18px;
+}
+
+.settings-hub {
+  max-width: 1100px;
+}
+
+.settings-detail {
+  max-width: 820px;
+}
+
+/* Tombol kembali di halaman detail kategori */
+.settings-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  margin-bottom: 4px;
+  padding: 6px 10px 6px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--ink-2);
+  font-family: var(--font-inter);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 160ms var(--ease), background 160ms var(--ease);
+}
+
+.settings-back:hover {
+  color: var(--ink);
+  background: var(--surface-hover);
+}
+
+.settings-back .icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Kotak cari pengaturan — lebih ringkas daripada hero pencarian */
+.page--settings .settings-hub .search-box {
+  max-width: 560px;
+}
+
+.page--settings .settings-hub .search-box__input {
+  height: 48px;
+  padding: 0 18px 0 48px;
+  font-family: var(--font-inter);
+  font-size: 14px;
+}
+
+/* Kartu Disarankan — satu pengaturan relevan, lebar penuh */
+.settings-suggest {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 18px 20px;
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  background: linear-gradient(120deg, var(--pink-tint), var(--glass-1) 55%);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 180ms var(--ease), border-color 180ms var(--ease);
+}
+
+.settings-suggest:hover {
+  border-color: rgba(242, 155, 187, 0.32);
+}
+
+[data-theme="light"] .settings-suggest {
+  background: linear-gradient(120deg, rgba(242, 155, 187, 0.14), rgba(255, 255, 255, 0.72) 55%);
+}
+
+.settings-suggest__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+
+.settings-suggest__icon .icon {
+  width: 21px;
+  height: 21px;
+}
+
+.settings-suggest__text {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-suggest__eyebrow {
+  color: var(--pink);
+  font-family: var(--font-inter);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.settings-suggest__title {
+  color: var(--ink);
+  font-family: var(--font-inter);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.settings-suggest__crumb {
+  color: var(--ink-3);
+  font-size: 12.5px;
+}
+
+.settings-suggest__chev {
+  flex: none;
+  color: var(--ink-3);
+}
+
+/* Grid kategori: 3 kolom desktop, 2 kolom tablet, daftar vertikal mobile */
+.settings-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 768px) {
+  .settings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .settings-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.settings-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 160px;
+  padding: 24px;
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  background: var(--glass-1);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 180ms var(--ease), border-color 180ms var(--ease);
+}
+
+.settings-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.settings-card:hover {
+  background: var(--glass-2);
+  border-color: rgba(242, 155, 187, 0.28);
+}
+
+[data-theme="light"] .settings-card {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .settings-card:hover {
+  background: #ffffff;
+  border-color: rgba(242, 155, 187, 0.4);
+}
+
+.settings-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 4px;
+  border-radius: 14px;
+  background: var(--pink-soft);
+  color: var(--pink);
+}
+
+.settings-card__icon .icon {
+  width: 21px;
+  height: 21px;
+}
+
+.settings-card__name {
+  color: var(--ink);
+  font-family: var(--font-inter);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.settings-card__desc {
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.settings-card__summary {
+  margin-top: auto;
+  padding-top: 10px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.settings-card__chev {
+  display: none;
+  color: var(--ink-3);
+}
+
+/* Fokus keyboard yang jelas pada semua kartu dan hasil pencarian */
+.settings-card:focus-visible,
+.settings-suggest:focus-visible,
+.settings-search-item:focus-visible {
+  outline: none;
+  border-color: rgba(242, 155, 187, 0.55);
+  box-shadow: 0 0 0 3px var(--pink-soft);
+}
+
+/* Hasil pencarian pengaturan individual */
+.settings-search-results {
+  display: grid;
+  gap: 6px;
+}.settings-search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  background: var(--glass-1);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 160ms var(--ease), border-color 160ms var(--ease);
+}
+
+.settings-search-item:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-glass-strong);
+}
+
+[data-theme="light"] .settings-search-item {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .settings-search-item:hover {
+  background: #ffffff;
+}
+
+.settings-search-item__label {
+  color: var(--ink);
+  font-family: var(--font-inter);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.settings-search-item__crumb {
+  flex: none;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.settings-search-empty {
+  color: var(--ink-2);
+  font-size: 13px;
+  padding: 2px 2px 6px;
+}
+
+/* Sorotan singkat pada baris pengaturan yang dituju dari pencarian */
+.settings-row.is-highlight {
+  border-radius: var(--radius-bar);
+  animation: settings-highlight 1.9s var(--ease);
+}
+
+@keyframes settings-highlight {
+  0% {
+    background: var(--pink-tint);
+    box-shadow: 0 0 0 8px var(--pink-tint);
+  }
+  60% {
+    background: var(--pink-tint);
+  }
+  100% {
+    background: transparent;
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* Mobile: kartu kategori menjadi baris daftar ala aplikasi native */
+@media (max-width: 767px) {
+  .settings-hub,
+  .settings-detail {
+    gap: 14px;
+  }
+
+  .settings-grid {
+    gap: 8px;
+  }
+
+  .settings-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    min-height: 48px;
+    padding: 12px 14px;
+    border-radius: 16px;
+  }
+
+  .settings-card__body {
+    align-items: stretch;
+    gap: 3px;
+    flex: 1;
+  }
+
+  .settings-card__icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 0;
+    border-radius: 12px;
+  }
+
+  .settings-card__name {
+    font-size: 15px;
+  }
+
+  .settings-card__desc {
+    font-size: 12.5px;
+  }
+
+  .settings-card__summary {
+    display: none;
+  }
+
+  .settings-card__chev {
+    display: inline-flex;
+    flex: none;
+    margin-left: auto;
+  }
+
+  .settings-suggest {
+    padding: 14px 16px;
+  }
+
+  .settings-suggest__icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Beri ruang aman di bawah agar tidak tertutup player dock */
+  .page--settings {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-card,
+  .settings-suggest,
+  .settings-search-item,
+  .settings-back {
+    transition: none;
+  }
+
+  .settings-row.is-highlight {
+    animation: none;
+    background: var(--pink-tint);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Pengaturan — Audio Lab (transisi, equalizer, efek, kecepatan)
+   -------------------------------------------------------------------------- */
+
+/* Baris bertumpuk (slider EQ membutuhkan lebar penuh, bukan di kanan). */
+.settings-row--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px 0 14px;
+}
+
+.eq-bands {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 5px;
+  max-width: 640px;
+}
+
+/* Fader vertikal ala equalizer perangkat: nilai dB di atas, slider tegak
+   di tengah, label frekuensi di bawah. */
+.eq-band {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.eq-band__label {
+  order: 3;
+  color: var(--ink-3);
+  font-family: var(--font-inter);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.eq-band__range {
+  order: 2;
+  width: 100%;
+  max-width: 32px;
+  height: 118px;
+  margin: 0;
+  padding: 0;
+  /* Slider tegak: Chrome/Edge/Firefox modern lewat writing-mode;
+     nilai minimum tetap di bawah, maksimum di atas. */
+  writing-mode: vertical-lr;
+  direction: rtl;
+  accent-color: var(--pink);
+  cursor: pointer;
+}
+
+.eq-band__range:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.eq-band__value {
+  order: 1;
+  color: var(--ink-2);
+  font-family: var(--font-inter);
+  font-size: 10.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Kontrol equalizer redup saat dimatikan. */
+.settings-row[data-setting="eqpreset"] .segmented__btn:disabled,
+.settings-row[data-setting="eqband"] .eq-band__range:disabled {
+  opacity: 0.45;
+}
+
+@media (max-width: 767px) {
+  .eq-bands {
+    max-width: none;
+    gap: 3px;
+  }
+
+  .eq-band__label {
+    font-size: 9px;
+  }
+
+  .eq-band__value {
+    font-size: 9.5px;
+  }
+
+  .eq-band__range {
+    height: 100px;
   }
 }
 
