@@ -615,6 +615,23 @@
   flex: none;
 }
 
+/* Keterangan status ringkas di ujung baris (mis. "Terpasang"). */
+.settings-row__note {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.settings-row__note .icon {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+}
+
 /* Kartu profil pengembang di bagian Tentang. */
 .settings-profile {
   display: flex;

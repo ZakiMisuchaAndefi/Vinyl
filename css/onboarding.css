@@ -1,0 +1,1512 @@
+/* ==========================================================================
+   onboarding.css — intro pertama & penyiapan nama panggilan
+   ========================================================================== */
+
+html.has-onboarding,
+html.has-onboarding body {
+  overflow: hidden;
+}
+
+.onboarding {
+  --ob-bg: #120d11;
+  --ob-ink: #f6eef1;
+  --ob-ink-2: rgba(246, 238, 241, 0.62);
+  --ob-pink: #f29bbb;
+  --ob-accent-hover: #f7bed3;
+  --ob-on-accent: #120d11;
+  --ob-card: rgba(255, 255, 255, 0.08);
+  --ob-stroke: rgba(255, 255, 255, 0.14);
+  --ob-soft: rgba(255, 255, 255, 0.12);
+  --ob-hover: rgba(255, 255, 255, 0.08);
+  --ob-line: rgba(255, 255, 255, 0.07);
+  --ob-bubble-bg: rgba(255, 255, 255, 0.12);
+  --ob-bubble-stroke: rgba(246, 238, 241, 0.2);
+  --ob-bubble-stroke-strong: rgba(246, 238, 241, 0.28);
+  --ob-dot: rgba(246, 238, 241, 0.38);
+  --ob-field-border: rgba(255, 255, 255, 0.14);
+  --ob-field-bg: rgba(255, 255, 255, 0.12);
+  --ob-field-hover: rgba(255, 255, 255, 0.14);
+  --ob-field-focus: rgba(255, 255, 255, 0.16);
+  --ob-ring: rgba(242, 155, 187, 0.18);
+  --ob-ring-danger: rgba(255, 159, 176, 0.2);
+  --ob-danger: #ff9fb0;
+  --ob-opening-glow: rgba(242, 155, 187, 0.22);
+
+  position: fixed;
+  inset: 0;
+  z-index: 650;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background-color: var(--ob-bg);
+  background-image:
+    radial-gradient(120% 80% at 50% -10%, rgba(242, 155, 187, 0.08), transparent 58%),
+    radial-gradient(90% 70% at 100% 100%, rgba(169, 211, 240, 0.05), transparent 62%);
+  color: var(--ob-ink);
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  animation: ob-fade-in 300ms var(--ease-out) both;
+}
+
+/* Tema terang menyala mengikuti pilihan di langkah tampilan. */
+.onboarding.is-light {
+  --ob-bg: #f4f4f7;
+  --ob-ink: #1d1d1f;
+  --ob-ink-2: rgba(29, 29, 31, 0.62);
+  --ob-pink: #c92a68;
+  --ob-accent-hover: #a81f55;
+  --ob-on-accent: #ffffff;
+  --ob-card: rgba(255, 255, 255, 0.76);
+  --ob-stroke: rgba(0, 0, 0, 0.09);
+  --ob-soft: rgba(0, 0, 0, 0.05);
+  --ob-hover: rgba(0, 0, 0, 0.05);
+  --ob-line: rgba(0, 0, 0, 0.08);
+  --ob-bubble-bg: rgba(255, 255, 255, 0.72);
+  --ob-bubble-stroke: rgba(29, 29, 31, 0.14);
+  --ob-bubble-stroke-strong: rgba(29, 29, 31, 0.22);
+  --ob-dot: rgba(29, 29, 31, 0.28);
+  --ob-field-border: rgba(0, 0, 0, 0.12);
+  --ob-field-bg: rgba(255, 255, 255, 0.8);
+  --ob-field-hover: #ffffff;
+  --ob-field-focus: #ffffff;
+  --ob-ring: rgba(201, 42, 104, 0.16);
+  --ob-ring-danger: rgba(192, 57, 43, 0.16);
+  --ob-danger: #c0392b;
+  --ob-opening-glow: rgba(201, 42, 104, 0.16);
+}
+
+
+.onboarding:focus {
+  outline: none;
+}
+
+.onboarding.is-closing {
+  animation: ob-fade-out 220ms var(--ease) both;
+  pointer-events: none;
+}
+
+.onboarding__aura {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(60% 60% at 78% 42%, rgba(242, 155, 187, 0.05), transparent 70%);
+}
+
+.onboarding__stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 704fr) minmax(0, 840fr);
+  grid-template-areas: "copy hero";
+  align-items: center;
+  gap: clamp(32px, 4vw, 64px);
+  width: 100%;
+  max-width: 1920px;
+  min-height: 100dvh;
+  padding: clamp(28px, 5.5vh, 120px) clamp(28px, 6.25vw, 120px);
+}
+
+/* --------------------------------------------------------------------------
+   Kolom teks
+   -------------------------------------------------------------------------- */
+
+.onboarding__copy {
+  grid-area: copy;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.onboarding__copy-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.onboarding__copy.is-in,
+.onboarding__hero.is-in {
+  animation: ob-step-in 420ms var(--ease-out) both;
+}
+
+.ob-title {
+  margin: 0;
+  color: var(--ob-ink);
+  font-family: var(--font-inter);
+  font-size: clamp(42px, 5.42vw, 104px);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
+}
+
+.ob-title--setup {
+  font-size: clamp(38px, 4.58vw, 88px);
+}
+
+.ob-accent {
+  color: var(--ob-pink);
+}
+
+.ob-sub {
+  max-width: 620px;
+  margin: 0;
+  color: var(--ob-ink-2);
+  font-size: clamp(16px, 1.25vw, 24px);
+  font-weight: 400;
+  line-height: 1.42;
+  letter-spacing: -0.01em;
+}
+
+/* --------------------------------------------------------------------------
+   Kontrol
+   -------------------------------------------------------------------------- */
+
+.onboarding__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.ob-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 56px;
+}
+
+.ob-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 8px;
+  font-family: var(--font-inter);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--speed) var(--ease),
+    color var(--speed) var(--ease),
+    opacity var(--speed) var(--ease),
+    transform var(--speed) var(--ease);
+}
+
+.ob-btn--primary {
+  height: 56px;
+  background: var(--ob-pink);
+  color: var(--ob-on-accent);
+}
+
+.ob-btn--primary:hover {
+  background: var(--ob-accent-hover);
+}
+
+.ob-btn--primary:active {
+  transform: scale(0.985);
+}
+
+.ob-btn--primary:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ob-btn--text {
+  height: 48px;
+  padding: 0 20px;
+  background: transparent;
+  color: var(--ob-ink);
+}
+
+.ob-btn--text:hover {
+  background: var(--ob-hover);
+}
+
+.ob-dots {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 24px;
+}
+
+.ob-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ob-dot);
+  transition: background var(--speed) var(--ease);
+}
+
+.ob-dot.is-active {
+  background: var(--ob-pink);
+}
+
+.onboarding__skip {
+  display: none;
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top));
+  right: 20px;
+  z-index: 2;
+  height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ob-ink);
+  font-family: var(--font-inter);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.onboarding__skip:hover {
+  background: var(--ob-hover);
+}
+
+.onboarding__skip[hidden] {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Panggung ilustrasi
+   -------------------------------------------------------------------------- */
+
+.onboarding__hero {
+  grid-area: hero;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.ob-hero-media {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Vinyl + halo + gelembung (langkah 1 dan penyiapan nama). */
+.ob-vinyl {
+  position: relative;
+  width: min(100%, 864px);
+  aspect-ratio: 864 / 720;
+}
+
+.ob-vinyl__halo {
+  position: absolute;
+  left: 1.852%;
+  top: 7.333%;
+  width: 96.296%;
+  height: 87.111%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(242, 155, 187, 0.22) 0%,
+    rgba(242, 155, 187, 0.07) 60%,
+    rgba(242, 155, 187, 0) 100%
+  );
+}
+
+.ob-vinyl__record {
+  position: absolute;
+  left: -2.44%;
+  top: 10%;
+  display: block;
+  width: 86.93%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ob-bubble {
+  position: absolute;
+  display: block;
+  border: 1px solid var(--ob-bubble-stroke);
+  border-radius: 50%;
+  background: var(--ob-bubble-bg);
+  animation: ob-float 9s var(--ease) infinite;
+}
+
+.ob-bubble--1 {
+  left: 5.37%;
+  top: 6.44%;
+  width: 9.26%;
+  aspect-ratio: 1;
+}
+
+.ob-bubble--2 {
+  left: 76.98%;
+  top: 3.78%;
+  width: 12.04%;
+  aspect-ratio: 1;
+  animation-delay: -3.2s;
+  animation-duration: 11s;
+}
+
+.ob-bubble--3 {
+  left: 89.22%;
+  top: 68.67%;
+  width: 5.56%;
+  aspect-ratio: 1;
+  animation-delay: -5.4s;
+  animation-duration: 8s;
+}
+
+.ob-bubble--4 {
+  left: 14.69%;
+  top: 87.22%;
+  width: 4.63%;
+  aspect-ratio: 1;
+  animation-delay: -1.6s;
+  animation-duration: 10s;
+}
+
+/* --------------------------------------------------------------------------
+   Kartu ilustrasi produk
+   -------------------------------------------------------------------------- */
+
+.ob-product {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 864px);
+  font-size: clamp(11px, 1.25vw, 24px);
+  aspect-ratio: 864 / 640;
+}
+
+.ob-card {
+  background: var(--ob-card);
+  border: 1px solid var(--ob-stroke);
+  border-radius: 0.583em;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.ob-bubble--corner-1 {
+  left: 0.93%;
+  top: 6.25%;
+  width: 5.56%;
+  aspect-ratio: 1;
+  border-color: var(--ob-bubble-stroke-strong);
+  animation-delay: -2s;
+}
+
+.ob-bubble--corner-2 {
+  right: 0.93%;
+  bottom: 4.06%;
+  width: 7.41%;
+  aspect-ratio: 1;
+  border-color: var(--ob-bubble-stroke-strong);
+  animation-delay: -4.6s;
+  animation-duration: 11s;
+}
+
+/* Langkah 2 — pencarian. */
+.ob-card--search {
+  width: 94.44%;
+  padding: 1.333em;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.ob-search {
+  display: flex;
+  align-items: center;
+  gap: 0.667em;
+  height: 3em;
+  padding: 0 1em;
+  border-radius: 0.333em;
+  background: var(--ob-soft);
+  color: var(--ob-ink-2);
+  font-size: 1em;
+}
+
+.ob-search .icon {
+  width: 1.167em;
+  height: 1.167em;
+  opacity: 0.6;
+}
+
+.ob-song {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  height: 3.667em;
+}
+
+.ob-song__art {
+  flex: none;
+  width: 3em;
+  height: 3em;
+  border-radius: 0.136em;
+  object-fit: cover;
+}
+
+.ob-song__meta {
+  display: grid;
+  gap: 0.083em;
+  flex: 1;
+  min-width: 0;
+}
+
+.ob-song__title {
+  overflow: hidden;
+  color: var(--ob-ink);
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ob-song.is-active .ob-song__title {
+  color: var(--ob-pink);
+}
+
+.ob-song__artist {
+  overflow: hidden;
+  color: var(--ob-ink-2);
+  font-size: 0.75em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ob-song__time {
+  flex: none;
+  color: var(--ob-ink-2);
+  font-size: 0.75em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Langkah 3 — lirik sinkron. */
+.ob-card--lyrics {
+  display: flex;
+  align-items: center;
+  gap: 1.333em;
+  width: 94.44%;
+  min-height: 19.667em;
+  padding: 1.333em;
+}
+
+.ob-lyrics__cover {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  gap: 0.667em;
+  width: 11.667em;
+}
+
+.ob-lyrics__cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 0.53em;
+  object-fit: cover;
+}
+
+.ob-lyrics__track {
+  display: grid;
+  gap: 0.083em;
+}
+
+.ob-lyrics__title {
+  color: var(--ob-ink);
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.ob-lyrics__artist {
+  color: var(--ob-ink-2);
+  font-size: 0.75em;
+  line-height: 1.2;
+}
+
+.ob-lyrics__lines {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1em;
+  flex: 1;
+  min-width: 0;
+}
+
+.ob-lyrics__lines p {
+  margin: 0;
+  color: var(--ob-ink-2);
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.ob-lyrics__lines p.is-active {
+  color: var(--ob-pink);
+  font-size: 1.333em;
+}
+
+/* Langkah 4 — perpustakaan lokal. */
+.ob-card--library {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  width: 81.48%;
+  padding: 1.667em;
+}
+
+.ob-library__head {
+  display: flex;
+  align-items: center;
+  gap: 0.667em;
+  height: 2.667em;
+}
+
+.ob-library__device {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  flex: none;
+  width: 2em;
+  height: 2.333em;
+  padding-bottom: 0.333em;
+  border: 2px solid var(--ob-pink);
+  border-radius: 0.333em;
+}
+
+.ob-library__device span {
+  display: block;
+  width: 0.667em;
+  height: 2px;
+  background: var(--ob-pink);
+}
+
+.ob-library__id {
+  display: grid;
+  gap: 0.083em;
+  min-width: 0;
+}
+
+.ob-library__title {
+  color: var(--ob-ink);
+  font-size: 1.333em;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.ob-library__sub {
+  color: var(--ob-ink-2);
+  font-size: 0.75em;
+  line-height: 1.2;
+}
+
+.ob-library__rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ob-library__row {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  height: 2.667em;
+  color: var(--ob-ink);
+  font-size: 1.083em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.ob-library__row + .ob-library__row {
+  border-top: 1px solid var(--ob-line);
+}
+
+.ob-library__row .icon {
+  flex: none;
+  width: 1.167em;
+  height: 1.167em;
+  opacity: 0.6;
+}
+
+.ob-library__row.is-accent {
+  color: var(--ob-pink);
+}
+
+.ob-library__row.is-accent .icon {
+  opacity: 0.9;
+}
+
+/* Langkah streaming — online, FLAC, dan unduhan. */
+.ob-card--stream {
+  display: flex;
+  flex-direction: column;
+  gap: 1.333em;
+  width: 86.11%;
+  padding: 1.667em;
+}
+
+.ob-stream__head {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+.ob-stream__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.667em;
+  height: 2.667em;
+  border-radius: 0.333em;
+  background: var(--ob-soft);
+}
+
+.ob-stream__icon .icon {
+  width: 1.333em;
+  height: 1.333em;
+  opacity: 0.65;
+}
+
+.ob-stream__meta {
+  display: grid;
+  flex: 1;
+  gap: 0.083em;
+  min-width: 0;
+}
+
+.ob-stream__title {
+  color: var(--ob-ink);
+  font-size: 1.167em;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.ob-stream__sub {
+  color: var(--ob-ink-2);
+  font-size: 0.75em;
+  line-height: 1.2;
+}
+
+.ob-pill {
+  flex: none;
+  padding: 0.25em 0.75em;
+  border: 1px solid rgba(242, 155, 187, 0.42);
+  border-radius: 999px;
+  color: var(--ob-pink);
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  line-height: 1.4;
+}
+
+.ob-feature-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ob-feature {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  padding: 1em 0;
+}
+
+.ob-feature + .ob-feature {
+  border-top: 1px solid var(--ob-line);
+}
+
+.ob-feature__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2em;
+  height: 2em;
+  color: var(--ob-pink);
+}
+
+.ob-feature__icon .icon {
+  width: 1.25em;
+  height: 1.25em;
+}
+
+.ob-feature__text {
+  display: grid;
+  gap: 0.125em;
+  min-width: 0;
+}
+
+.ob-feature__title {
+  color: var(--ob-ink);
+  font-size: 1.083em;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.ob-feature__sub {
+  color: var(--ob-ink-2);
+  font-size: 0.75em;
+  line-height: 1.25;
+}
+
+/* --------------------------------------------------------------------------
+   Penyiapan tema
+   -------------------------------------------------------------------------- */
+
+.ob-themes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1em;
+  width: min(100%, 780px);
+  font-size: clamp(12px, 1.25vw, 24px);
+}
+
+.ob-theme {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  padding: 0.75em;
+  border: 1px solid var(--ob-stroke);
+  border-radius: 0.5em;
+  background: var(--ob-card);
+  font-family: var(--font-inter);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--speed) var(--ease),
+    background var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed) var(--ease);
+}
+
+.ob-theme:hover {
+  background: var(--ob-soft);
+}
+
+.ob-theme:active {
+  transform: scale(0.99);
+}
+
+.ob-theme.is-active {
+  border-color: var(--ob-pink);
+  box-shadow: 0 0 0 1px var(--ob-pink);
+}
+
+.ob-theme__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625em;
+  padding: 0.9em;
+  border-radius: 0.375em;
+}
+
+.ob-theme__preview--dark {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #08070a;
+}
+
+.ob-theme__preview--light {
+  border: 1px solid rgba(23, 18, 26, 0.08);
+  background: #f4f4f7;
+}
+
+.ob-theme__bar {
+  display: block;
+  width: 42%;
+  height: 0.5em;
+  border-radius: 999px;
+  background: var(--ob-pink);
+}
+
+.ob-theme__row {
+  display: block;
+  height: 0.5em;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.ob-theme__preview--light .ob-theme__row {
+  background: rgba(23, 18, 26, 0.14);
+}
+
+.ob-theme__row--short {
+  width: 64%;
+}
+
+.ob-theme__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  padding: 0 0.25em 0.25em;
+}
+
+.ob-theme__name {
+  display: grid;
+  gap: 0.125em;
+  color: var(--ob-ink);
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.ob-theme__sub {
+  color: var(--ob-ink-2);
+  font-size: 0.72em;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.ob-theme__check {
+  width: 1.1em;
+  height: 1.1em;
+  color: var(--ob-pink);
+  opacity: 0;
+  transition: opacity var(--speed) var(--ease);
+}
+
+.ob-theme.is-active .ob-theme__check {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Penyiapan nama
+   -------------------------------------------------------------------------- */
+
+.ob-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: min(100%, 640px);
+}
+
+.ob-echo {
+  margin: 0;
+  color: var(--ob-ink);
+  font-size: clamp(20px, 1.667vw, 32px);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.ob-name {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.ob-name__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ob-name__input {
+  width: 100%;
+  height: 64px;
+  padding: 0 24px;
+  border: 1px solid var(--ob-field-border);
+  border-radius: 8px;
+  background: var(--ob-field-bg);
+  color: var(--ob-ink);
+  font-family: var(--font-inter);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.42;
+  transition:
+    border-color var(--speed) var(--ease),
+    background var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease);
+}
+
+.ob-name__input::placeholder {
+  color: var(--ob-ink-2);
+}
+
+.ob-name__input:hover {
+  background: var(--ob-field-hover);
+}
+
+.ob-name__input:focus {
+  border-color: var(--ob-pink);
+  background: var(--ob-field-focus);
+  box-shadow: 0 0 0 3px var(--ob-ring);
+  outline: none;
+}
+
+.ob-name__input.is-invalid {
+  border-color: var(--ob-danger);
+}
+
+.ob-name__input.is-invalid:focus {
+  box-shadow: 0 0 0 3px var(--ob-ring-danger);
+}
+
+.ob-name__hint {
+  margin: 0;
+  color: var(--ob-danger);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.ob-name__hint[hidden] {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Pratinjau sapaan
+   -------------------------------------------------------------------------- */
+
+.ob-greetings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  width: min(100%, 816px);
+  padding: 1em;
+  border: 1px solid var(--ob-stroke);
+  border-radius: 0.4375em;
+  background: var(--ob-card);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  font-size: clamp(17px, 1.667vw, 32px);
+}
+
+.ob-greeting {
+  color: var(--ob-ink);
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.ob-greeting.is-active {
+  color: var(--ob-pink);
+}
+
+/* --------------------------------------------------------------------------
+   Opening di awal penyiapan
+   Lapisan ini menutup layar sambutan, lalu memudar ke langkah berikutnya.
+   -------------------------------------------------------------------------- */
+
+.ob-opening {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(58% 54% at 50% 44%, var(--ob-opening-glow), transparent 72%),
+    var(--ob-bg);
+  opacity: 0;
+  transition: opacity 520ms var(--ease-out);
+  will-change: opacity;
+}
+
+.ob-opening.is-active {
+  opacity: 1;
+}
+
+.ob-opening.is-leaving {
+  opacity: 0;
+  transform: scale(1.035);
+  transition:
+    opacity 680ms var(--ease),
+    transform 680ms var(--ease-out);
+}
+
+.ob-opening__glow {
+  position: absolute;
+  width: min(78vmin, 640px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--ob-opening-glow), transparent 68%);
+  filter: blur(14px);
+  opacity: 0;
+  transform: scale(0.7);
+  animation: ob-opening-glow 2600ms var(--ease-out) 80ms both;
+}
+
+.ob-opening__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(20px, 3vh, 34px);
+  transition:
+    opacity 620ms var(--ease),
+    transform 680ms var(--ease-out),
+    filter 620ms var(--ease);
+}
+
+.ob-opening.is-leaving .ob-opening__stage {
+  opacity: 0;
+  transform: scale(1.06);
+  filter: blur(5px);
+}
+
+.ob-opening__disc {
+  position: relative;
+  z-index: 1;
+  width: clamp(210px, 30vw, 320px);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transform: scale(0.82) rotate(-10deg);
+  filter: blur(12px);
+  animation: ob-opening-disc 1150ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+
+.ob-opening__record {
+  width: 100%;
+  height: 100%;
+  animation: ob-opening-spin 16s linear 1300ms infinite;
+  will-change: transform;
+}
+
+.ob-opening__ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--ob-stroke);
+  border-radius: 50%;
+  opacity: 0;
+  animation: ob-opening-ring 1400ms var(--ease-out) 2550ms both;
+}
+
+.ob-opening__ring::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--ob-stroke);
+  border-radius: 50%;
+  opacity: 0;
+  animation: ob-opening-ring 1400ms var(--ease-out) 2790ms both;
+}
+
+.ob-opening__word {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--ob-ink);
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6vw, 76px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  opacity: 0;
+  transform: translateY(18px);
+  animation: ob-opening-word 1050ms cubic-bezier(0.22, 1, 0.36, 1) 330ms both;
+}
+
+.ob-opening__word span {
+  color: var(--ob-pink);
+}
+
+@keyframes ob-opening-glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  32% {
+    opacity: 0.9;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 0.55;
+    transform: scale(1.16);
+  }
+}
+
+@keyframes ob-opening-disc {
+  0% {
+    opacity: 0;
+    transform: scale(0.82) rotate(-10deg);
+    filter: blur(12px);
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+    filter: blur(0);
+  }
+}
+
+@keyframes ob-opening-word {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+    letter-spacing: 0.06em;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    letter-spacing: -0.045em;
+  }
+}
+
+@keyframes ob-opening-ring {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  18% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
+}
+
+@keyframes ob-opening-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ob-opening {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Fokus
+   -------------------------------------------------------------------------- */
+
+.onboarding button:focus-visible,
+.onboarding input:focus-visible {
+  outline: 2px solid var(--ob-ink);
+  outline-offset: 3px;
+}
+
+.onboarding input:focus-visible {
+  outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   Animasi
+   -------------------------------------------------------------------------- */
+
+@keyframes ob-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ob-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ob-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ob-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Layar sempit — tata letak potret
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .onboarding__stage {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 24px;
+    min-height: 100dvh;
+    padding: 24px 24px 32px;
+  }
+
+  .onboarding__skip {
+    display: inline-flex;
+  }
+
+  .ob-skip-desktop {
+    display: none;
+  }
+
+  .onboarding__hero {
+    flex: none;
+    height: clamp(300px, 47vh, 400px);
+    padding-top: 40px;
+  }
+
+  .onboarding__copy,
+  .onboarding__copy-main {
+    gap: 16px;
+  }
+
+  .onboarding__controls {
+    flex-direction: column-reverse;
+    gap: 24px;
+  }
+
+  .ob-actions {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .ob-change-name {
+    align-self: center;
+  }
+
+  .ob-btn--primary {
+    width: 100%;
+  }
+
+  .ob-dots {
+    align-self: center;
+  }
+
+  .ob-title {
+    font-size: clamp(40px, 14vw, 56px);
+  }
+
+  .ob-title--setup {
+    font-size: clamp(36px, 12vw, 48px);
+  }
+
+  .ob-sub {
+    font-size: clamp(17px, 5.1vw, 20px);
+    line-height: 1.4;
+  }
+
+  .ob-vinyl {
+    width: min(100%, 342px);
+  }
+
+  .ob-product {
+    width: 100%;
+    font-size: 15px;
+    aspect-ratio: auto;
+  }
+
+  .ob-bubble--corner-1 {
+    left: -1.5%;
+    top: 4%;
+  }
+
+  .ob-bubble--corner-2 {
+    right: -1.5%;
+    bottom: 4%;
+    top: auto;
+  }
+
+  .ob-card--search {
+    width: 95.3%;
+    padding: 1.07em;
+    gap: 1.07em;
+  }
+
+  .ob-search {
+    height: 3.2em;
+  }
+
+  .ob-card--lyrics {
+    width: 95.3%;
+    min-height: 21.5em;
+    padding: 1.07em;
+    gap: 1.07em;
+    font-size: 0.87em;
+  }
+
+  .ob-lyrics__cover {
+    width: 8em;
+  }
+
+  .ob-lyrics__artist {
+    font-size: 0.85em;
+  }
+
+  .ob-lyrics__lines {
+    gap: 0.92em;
+  }
+
+  .ob-card--library {
+    width: 88.3%;
+    padding: 1.6em;
+    gap: 1.07em;
+  }
+
+  .ob-library__head {
+    height: 3.2em;
+  }
+
+  .ob-library__device {
+    width: 2.13em;
+    height: 2.67em;
+  }
+
+  .ob-library__row {
+    height: 2.4em;
+    font-size: 1.07em;
+  }
+
+  .ob-library__row .icon {
+    width: 1.07em;
+    height: 1.07em;
+  }
+
+  .ob-card--stream {
+    width: 95.3%;
+    padding: 1.07em;
+    gap: 1.07em;
+  }
+
+  .ob-stream__icon {
+    width: 2.4em;
+    height: 2.4em;
+  }
+
+  .ob-feature {
+    padding: 0.87em 0;
+  }
+
+  .ob-themes {
+    width: 100%;
+    gap: 0.667em;
+    font-size: 15px;
+  }
+
+  .ob-theme {
+    gap: 0.625em;
+    padding: 0.625em;
+  }
+
+  .ob-theme__preview {
+    gap: 0.5em;
+    padding: 0.75em;
+  }
+
+  .ob-theme__name {
+    font-size: 0.93em;
+  }
+
+  .ob-setup {
+    gap: 16px;
+    width: min(100%, 342px);
+  }
+
+  .ob-echo {
+    font-size: 20px;
+  }
+
+  .ob-name__input {
+    height: 56px;
+    padding: 0 20px;
+    font-size: 20px;
+  }
+
+  .ob-greetings {
+    width: 100%;
+    padding: 20px;
+    gap: 16px;
+    font-size: 20px;
+  }
+}
+
+/* Layar desktop yang pendek — rapatkan ruang vertikal. */
+@media (min-width: 901px) and (max-height: 800px) {
+  .onboarding__stage {
+    gap: 40px;
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  .ob-title {
+    font-size: clamp(42px, 4.6vw, 76px);
+  }
+
+  .ob-title--setup {
+    font-size: clamp(38px, 4vw, 64px);
+  }
+
+  .ob-vinyl {
+    max-width: 660px;
+  }
+
+  .ob-product {
+    font-size: clamp(10px, 1.1vw, 18px);
+  }
+
+  .ob-card--lyrics {
+    min-height: 18em;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Aksesibilitas gerak
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding,
+  .onboarding *,
+  .onboarding *::before,
+  .onboarding *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
