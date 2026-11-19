@@ -373,6 +373,8 @@
     const mobileParts = [];
     if (opts.showArtist !== false) mobileParts.push(track.artist);
     else if (opts.showAlbum !== false) mobileParts.push(track.album);
+    // Durasi pindah ke subjudul di ponsel karena kolom waktu disembunyikan.
+    if (track.duration) mobileParts.push(trackTime(track));
     const mobileSub = mobileParts.filter(Boolean).join(" · ");
     return (
       '<div class="track-row' +
@@ -528,7 +530,9 @@
     const current = playerState.currentId === track.id;
     const playing = current && playerState.isPlaying;
     const query = opts.query || "";
-    const mobileSub = track.artist;
+    const mobileSub = [track.artist, track.duration ? trackTime(track) : ""]
+      .filter(Boolean)
+      .join(" · ");
     return (
       '<div class="track-row track-row--online' +
       (current ? " is-current" : "") +
@@ -863,12 +867,42 @@
     }));
   }
 
+  // Sapaan memakai nama panggilan yang tersimpan di perangkat. Slot larut
+  // malam mengikuti kebiasaan orang yang masih bangun lewat tengah malam.
+  const GREETING_SLOTS = [
+    { key: "pagi", label: "Selamat pagi", end: ".", from: 5, to: 11 },
+    { key: "siang", label: "Selamat siang", end: ".", from: 11, to: 15 },
+    { key: "sore", label: "Selamat sore", end: ".", from: 15, to: 19 },
+    { key: "malam", label: "Selamat malam", end: ".", from: 19, to: 24 },
+    { key: "larut", label: "Belum tidur", end: "?", from: 0, to: 5 }
+  ];
+
+  function displayName() {
+    const value = L.getSetting("displayName", "");
+    return typeof value === "string" ? value.trim() : "";
+  }
+
+  function greetingSlots() {
+    return GREETING_SLOTS;
+  }
+
+  function greetingSlot(hour) {
+    const value = Number.isFinite(hour) ? hour : new Date().getHours();
+    return (
+      GREETING_SLOTS.find(function (slot) {
+        return value >= slot.from && value < slot.to;
+      }) || GREETING_SLOTS[3]
+    );
+  }
+
   function greetingText() {
-    const hour = new Date().getHours();
-    if (hour < 11) return "Selamat pagi";
-    if (hour < 15) return "Selamat siang";
-    if (hour < 19) return "Selamat sore";
-    return "Selamat malam";
+    return greetingSlot(new Date().getHours()).label;
+  }
+
+  function greetingLine(name, date) {
+    const slot = greetingSlot((date || new Date()).getHours());
+    const value = typeof name === "string" ? name.trim() : displayName();
+    return slot.label + (value ? ", " + value : "") + slot.end;
   }
 
   function homeHero(hasLibrary) {
@@ -876,8 +910,8 @@
       '<header class="home-greeting">' +
       '<div class="home-greeting__text">' +
       '<h1 class="home-greeting__title">' +
-      esc(greetingText()) +
-      ".</h1>" +
+      esc(greetingLine()) +
+      "</h1>" +
       '<p class="home-greeting__sub">' +
       (hasLibrary
         ? "Temukan soundtrack harianmu dari koleksi dan rekomendasi pilihan."
@@ -2362,6 +2396,11 @@
     section,
     icon,
     esc,
-    plural
+    plural,
+    displayName,
+    greetingText,
+    greetingLine,
+    greetingSlot,
+    greetingSlots
   };
 })(window.AM = window.AM || {});

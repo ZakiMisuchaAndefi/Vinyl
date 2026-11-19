@@ -122,6 +122,26 @@
     lastTimeDetail: null
   };
 
+  // PWA: simpan event pemasangan agar bisa dipicu dari Pengaturan → Tentang.
+  let installPrompt = null;
+
+  window.addEventListener("beforeinstallprompt", function (event) {
+    event.preventDefault();
+    installPrompt = event;
+    // Kalau Pengaturan sudah terbuka, tampilkan tombol "Pasang" tanpa reload.
+    if (state.currentRoute && state.currentRoute.name === "settings") {
+      refreshView({ keepScroll: true });
+    }
+  });
+
+  window.addEventListener("appinstalled", function () {
+    installPrompt = null;
+    // Baris "Pasang aplikasi" langsung berubah jadi status terpasang.
+    if (state.currentRoute && state.currentRoute.name === "settings") {
+      refreshView({ keepScroll: true });
+    }
+  });
+
   /* ------------------------------------------------------------------------
      Helper
      ------------------------------------------------------------------------ */
@@ -292,8 +312,6 @@
     els.npSeek = $("#npSeek");
     els.npCurTime = $("#npCurTime");
     els.npDurTime = $("#npDurTime");
-    els.npVolume = $("#npVolume");
-    els.npMute = $("#npMute");
 
     els.modalRoot = $("#modalRoot");
     els.menuRoot = $("#menuRoot");
@@ -352,6 +370,22 @@
     renderSidebarPlaylists();
     updateStorageInfo();
     renderRoute({ focusSearch: true });
+    registerServiceWorker();
+
+    // Intro pertama hanya muncul sekali; setelah selesai nama dipakai Beranda.
+    if (AM.Onboarding && typeof AM.Onboarding.init === "function") {
+      AM.Onboarding.init({
+        onComplete: function () {
+          const route = state.currentRoute && state.currentRoute.name;
+          if (route === "home" || route === "settings") {
+            refreshView({ keepScroll: true });
+          }
+        },
+        onThemeSelect: function (theme) {
+          applyTheme(theme, true);
+        }
+      });
+    }
 
     if (L.state.storage === "memory") {
       toast(
@@ -383,6 +417,60 @@
   function toggleTheme() {
     const current = document.documentElement.getAttribute("data-theme");
     applyTheme(current === "light" ? "dark" : "light", true);
+  }
+
+  /* ------------------------------------------------------------------------
+     PWA
+     ------------------------------------------------------------------------ */
+
+  function isStandaloneApp() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true
+    );
+  }
+
+  function isIosDevice() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  }
+
+  function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+    const secure =
+      location.protocol === "https:" ||
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1";
+    if (!secure) return;
+    navigator.serviceWorker.register("sw.js").catch(function (error) {
+      console.warn("[app] service worker gagal didaftarkan:", error);
+    });
+  }
+
+  async function installApp(button) {
+    if (!installPrompt) {
+      toast(
+        isIosDevice()
+          ? "Di Safari: ketuk tombol Bagikan, lalu pilih “Tambah ke Layar Utama”."
+          : "Pasang lewat menu browser: ⋮ → “Pasang aplikasi” atau “Instal Vinyl”.",
+        { icon: "info", duration: 8000 }
+      );
+      return;
+    }
+    installPrompt.prompt();
+    let choice = null;
+    try {
+      choice = await installPrompt.userChoice;
+    } catch (error) {
+      choice = null;
+    }
+    installPrompt = null;
+    if (choice && choice.outcome === "accepted") {
+      toast("Vinyl dipasang. Buka lewat ikon di layar utama.", { icon: "check" });
+      if (button) {
+        button.disabled = true;
+        button.textContent = "Terpasang";
+      }
+    }
   }
 
   /* ------------------------------------------------------------------------
@@ -1252,8 +1340,6 @@
     }
     if (els.npRepeatOne) els.npRepeatOne.hidden = s.repeat !== "one";
     // npExpand does not need aria-pressed sync
-
-    updateNowPlayingVolume({ volume: s.volume, muted: s.muted });
   }
 
   function updateNowPlayingTime(detail) {
@@ -1276,28 +1362,6 @@
     if (els.npDurTime) {
       const remaining = Math.max(0, duration - current);
       els.npDurTime.textContent = duration > 0 ? "-" + U.fmtTime(remaining) : U.fmtTime(0);
-    }
-  }
-
-  function updateNowPlayingVolume(detail) {
-    if (!els.npVolume) return;
-    const volume = U.clamp(Number(detail && detail.volume) || 0, 0, 1);
-    const muted = !!(detail && detail.muted);
-
-    els.npVolume.style.setProperty("--pct", volume * 100 + "%");
-    els.npVolume.setAttribute("aria-valuenow", String(Math.round(volume * 100)));
-    els.npVolume.setAttribute(
-      "aria-valuetext",
-      muted ? "Bisu" : Math.round(volume * 100) + "%"
-    );
-    if (els.npMute) {
-      const name = muted || volume === 0 ? "volume-x" : volume < 0.5 ? "volume-1" : "volume-2";
-      U.setIconIn(els.npMute, name);
-      const label = muted ? "Bunyikan" : "Bisukan";
-      els.npMute.setAttribute("title", label);
-      els.npMute.setAttribute("aria-label", label);
-      els.npMute.setAttribute("aria-pressed", muted ? "true" : "false");
-      els.npMute.classList.toggle("is-active", muted);
     }
   }
 
@@ -1337,7 +1401,6 @@
       els.btnMute.setAttribute("aria-label", muted ? "Bunyikan" : "Bisukan");
       els.btnMute.setAttribute("aria-pressed", muted ? "true" : "false");
     }
-    updateNowPlayingVolume(detail);
   }
 
   function syncTrackRows() {
@@ -1861,7 +1924,6 @@
     if (els.npNext) els.npNext.addEventListener("click", () => P.next(true));
     if (els.npShuffle) els.npShuffle.addEventListener("click", () => P.toggleShuffle());
     if (els.npRepeat) els.npRepeat.addEventListener("click", () => P.cycleRepeat());
-    if (els.npMute) els.npMute.addEventListener("click", () => P.toggleMute());
     if (els.npLike) {
       els.npLike.addEventListener("click", () => {
         if (P.state.currentId) toggleLike(P.state.currentId);
@@ -2015,7 +2077,6 @@
 
   function bindVolume() {
     bindVolumeElement(els.volume);
-    bindVolumeElement(els.npVolume);
   }
 
   function bindVolumeElement(el) {
@@ -2477,8 +2538,13 @@
         syncSettingsControls();
         return;
       }
+      case "install-app":
+        return installApp(actionEl);
       case "settings-open":
         return openSettingsSection(actionEl);
+      case "edit-name":
+        if (AM.Onboarding) AM.Onboarding.open({ start: "name" });
+        return;
       case "settings-import":
         closeSettingsForAction(() => openImportDialog());
         return;
@@ -2551,7 +2617,7 @@
       }
 
       if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-        if (target && (target.id === "seek" || target.id === "volume" || target.id === "npSeek" || target.id === "npVolume")) return;
+        if (target && (target.id === "seek" || target.id === "volume" || target.id === "npSeek")) return;
         event.preventDefault();
         P.seekBy(event.key === "ArrowRight" ? 5 : -5);
         return;
@@ -4288,10 +4354,12 @@
     { id: "comp", label: "Kompresor dinamis", section: "audiolab", keywords: "kompresor compressor meratakan volume keras pelan dinamika" },
     { id: "speed", label: "Kecepatan putar", section: "audiolab", keywords: "kecepatan speed tempo lambat cepat 1x 2x putaran" },
     { id: "pitch", label: "Pertahankan nada", section: "audiolab", keywords: "pitch nada chipmunk preservesPitch tempo nada asli" },
+    { id: "name", label: "Nama panggilan", section: "data", keywords: "nama panggilan sapaan panggil profil onboarding" },
     { id: "import", label: "Impor musik", section: "data", keywords: "impor musik file upload mp3 m4a flac wav ogg" },
     { id: "demo", label: "Perpustakaan demo", section: "data", keywords: "demo contoh lagu percobaan" },
     { id: "storage", label: "Penyimpanan", section: "data", keywords: "penyimpanan storage kuota indexeddb memori data" },
     { id: "clear", label: "Hapus semua data", section: "data", keywords: "hapus semua data reset bersihkan" },
+    { id: "install", label: "Pasang aplikasi", section: "tentang", keywords: "pasang install pwa aplikasi offline layar utama" },
     { id: "shortcuts", label: "Pintasan keyboard", section: "tentang", keywords: "pintasan keyboard shortcut bantuan" }
   ];
 
@@ -4388,6 +4456,23 @@
       '<div class="settings-row__action">' +
       qualitySegmented("set-download-quality", downloadQuality) +
       "</div></div>"
+    );
+  }
+
+  function settingsNameRow() {
+    const stored = L.getSetting("displayName", "");
+    const name = typeof stored === "string" ? stored.trim() : "";
+    return (
+      '<div class="settings-row" data-setting="name"><div class="settings-row__text"><div class="settings-row__title">Nama panggilan</div><div class="settings-row__sub">' +
+      (name
+        ? "Vinyl menyapamu dengan &ldquo;" +
+          U.esc(name) +
+          "&rdquo; di Beranda. Tersimpan di perangkat ini."
+        : "Vinyl belum tahu harus memanggilmu apa. Atur nama panggilan untuk sapaan di Beranda.") +
+      '</div></div><div class="settings-row__action"><button class="btn btn--secondary btn--small" type="button" data-action="edit-name">' +
+      icon("edit") +
+      (name ? "Ubah" : "Atur") +
+      "</button></div></div>"
     );
   }
 
@@ -4559,9 +4644,39 @@
     );
   }
 
-  function settingsAboutHTML() {    return (
-      '<div class="settings-row" data-setting="shortcuts"><div class="settings-row__text"><div class="settings-row__title">Vinyl</div><div class="settings-row__sub">Pemutar musik streaming bergaya semi-Apple Music di browser. Tanpa pemasangan dan tanpa akun, lengkap dengan FLAC lossless dan unduhan langsung dari browser.</div></div>' +
+  function settingsInstallRow() {
+    if (isStandaloneApp()) {
+      return (
+        '<div class="settings-row" data-setting="install"><div class="settings-row__text"><div class="settings-row__title">Vinyl sudah terpasang</div><div class="settings-row__sub">Aplikasi berjalan di layar penuh. Buka lagi lewat ikon Vinyl di layar utama.</div></div>' +
+        '<div class="settings-row__action"><span class="settings-row__note">' +
+        icon("check") +
+        "Terpasang</span></div></div>"
+      );
+    }
+
+    if (isIosDevice()) {
+      return (
+        '<div class="settings-row" data-setting="install"><div class="settings-row__text"><div class="settings-row__title">Pasang aplikasi</div><div class="settings-row__sub">Di Safari, ketuk tombol Bagikan lalu pilih “Tambah ke Layar Utama”. Vinyl terbuka seperti aplikasi biasa.</div></div></div>'
+      );
+    }
+
+    if (!installPrompt) {
+      return (
+        '<div class="settings-row" data-setting="install"><div class="settings-row__text"><div class="settings-row__title">Pasang aplikasi</div><div class="settings-row__sub">Buka menu browser lalu pilih “Pasang aplikasi”. Vinyl bisa dibuka dari layar utama tanpa address bar.</div></div></div>'
+      );
+    }
+
+    return (
+      '<div class="settings-row" data-setting="install"><div class="settings-row__text"><div class="settings-row__title">Pasang aplikasi</div><div class="settings-row__sub">Tambahkan Vinyl ke layar utama. Terbuka layar penuh dan tetap ringan dipakai di ponsel.</div></div>' +
+      '<div class="settings-row__action"><button class="btn btn--ghost btn--small" type="button" data-action="install-app">Pasang</button></div></div>'
+    );
+  }
+
+  function settingsAboutHTML() {
+    return (
+      '<div class="settings-row" data-setting="shortcuts"><div class="settings-row__text"><div class="settings-row__title">Vinyl</div><div class="settings-row__sub">Pemutar musik streaming bergaya semi-Apple Music di browser. Tanpa akun, lengkap dengan FLAC lossless dan unduhan langsung dari browser.</div></div>' +
       '<div class="settings-row__action"><button class="text-btn" type="button" data-action="settings-shortcuts">Pintasan</button></div></div>' +
+      settingsInstallRow() +
       '<p class="about-line">Dibuat dengan HTML, CSS, dan JavaScript murni, ditambah fungsi serverless untuk pencarian dan streaming. <strong>Space</strong> putar/jeda · <strong>←/→</strong> geser 5 detik · <strong>⌘K/Ctrl K</strong> cari · <strong>M</strong> bisukan · <strong>Q</strong> antrean.</p>' +
       '<p class="about-line">Terima kasih untuk proyek open source dan layanan yang membuat Vinyl mungkin. <a href="https://github.com/ZakiMisuchaAndefi/Vinyl#terima-kasih--kredit" target="_blank" rel="noopener noreferrer">Lihat kredit lengkap</a>.</p>' +
       '<div class="settings-profile" data-setting="social">' +
@@ -4593,7 +4708,7 @@
       case "audiolab":
         return settingsAudioLabRows();
       case "data":
-        return settingsImportRow() + settingsDemoRow() + settingsStorageRow() + settingsClearRow();
+        return settingsNameRow() + settingsImportRow() + settingsDemoRow() + settingsStorageRow() + settingsClearRow();
       case "tentang":
         return settingsAboutHTML();
       default:
