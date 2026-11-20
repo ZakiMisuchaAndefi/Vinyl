@@ -31,7 +31,6 @@
     shuffle: false,
     repeat: "off",
     demoLoaded: false,
-    lastRoute: "#/home",
     streamQuality: "high",
     downloadQuality: "best",
     statsForNerds: false
