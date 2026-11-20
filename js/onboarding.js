@@ -181,7 +181,7 @@
     return (
       '<div class="ob-vinyl">' +
       '<span class="ob-vinyl__halo" aria-hidden="true"></span>' +
-      '<img class="ob-vinyl__record" src="assets/onboarding/vinyl-record.svg" alt="" draggable="false">' +
+      '<img class="ob-vinyl__record" src="/assets/onboarding/vinyl-record.svg" alt="" draggable="false">' +
       '<span class="ob-bubble ob-bubble--1" aria-hidden="true"></span>' +
       '<span class="ob-bubble ob-bubble--2" aria-hidden="true"></span>' +
       '<span class="ob-bubble ob-bubble--3" aria-hidden="true"></span>' +
@@ -203,7 +203,7 @@
         '<div class="ob-song' +
         (song.active ? " is-active" : "") +
         '">' +
-        '<img class="ob-song__art" src="assets/onboarding/' +
+        '<img class="ob-song__art" src="/assets/onboarding/' +
         song.art +
         '" alt="" width="72" height="72" draggable="false">' +
         '<div class="ob-song__meta">' +
@@ -324,7 +324,7 @@
       bubblesHTML() +
       '<div class="ob-card ob-card--lyrics">' +
       '<div class="ob-lyrics__cover">' +
-      '<img src="assets/onboarding/art-heading-home.png" alt="" width="280" height="280" draggable="false">' +
+      '<img src="/assets/onboarding/art-heading-home.png" alt="" width="280" height="280" draggable="false">' +
       '<div class="ob-lyrics__track">' +
       '<span class="ob-lyrics__title">Heading home</span>' +
       '<span class="ob-lyrics__artist">Amber Skye</span>' +
@@ -547,7 +547,7 @@
       '<div class="ob-opening__glow" aria-hidden="true"></div>' +
       '<div class="ob-opening__stage">' +
       '<div class="ob-opening__disc">' +
-      '<img class="ob-opening__record" src="assets/onboarding/vinyl-record.svg" alt="" draggable="false">' +
+      '<img class="ob-opening__record" src="/assets/onboarding/vinyl-record.svg" alt="" draggable="false">' +
       '<span class="ob-opening__ring" aria-hidden="true"></span>' +
       "</div>" +
       '<p class="ob-opening__word">Vinyl<span>.</span></p>' +
@@ -558,7 +558,7 @@
   function primeOpeningAudio() {
     if (openingAudio) return openingAudio;
     try {
-      openingAudio = new Audio("assets/onboarding/opening.mp3");
+      openingAudio = new Audio("/assets/onboarding/opening.mp3");
       openingAudio.preload = "auto";
       openingAudio.volume = 0.9;
       openingAudio.setAttribute("playsinline", "");

@@ -1056,6 +1056,14 @@ try {
         Send-Response $stream 405 "Method Not Allowed" "text/plain; charset=utf-8" ([System.Text.Encoding]::UTF8.GetBytes("Metode tidak didukung.")) $false
       } elseif (-not $full.StartsWith($rootFull, [System.StringComparison]::OrdinalIgnoreCase)) {
         Send-Response $stream 403 "Forbidden" "text/plain; charset=utf-8" ([System.Text.Encoding]::UTF8.GetBytes("Akses ditolak.")) $headOnly
+      } elseif (-not (Test-Path -LiteralPath $full -PathType Leaf) -and
+                -not ([System.IO.Path]::GetExtension($path)) -and
+                $path -notmatch '^/(api|downloads|scripts|_vercel)(/|$)') {
+        # Fallback SPA lokal: /home, /pengaturan, dan path bersih lain
+        # dilayani index.html seperti rewrite di Vercel.
+        $indexFile = Join-Path $rootFull "index.html"
+        $bytes = [System.IO.File]::ReadAllBytes($indexFile)
+        Send-Response $stream 200 "OK" "text/html; charset=utf-8" $bytes $headOnly
       } elseif (-not (Test-Path -LiteralPath $full -PathType Leaf)) {
         Send-Response $stream 404 "Not Found" "text/plain; charset=utf-8" ([System.Text.Encoding]::UTF8.GetBytes("File tidak ditemukan.")) $headOnly
       } else {

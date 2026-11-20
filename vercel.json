@@ -30,5 +30,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!api/|downloads/|scripts/|_vercel/|.*\\..*).*)",
+      "destination": "/index.html"
+    }
   ]
 }

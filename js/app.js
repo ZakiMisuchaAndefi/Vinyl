@@ -162,18 +162,37 @@
     return UI.toast(message, options);
   }
 
-  function normalizeHash(hash) {
-    const value = String(hash || "").trim();
-    if (!value || value === "#" || value === "#/" || !value.startsWith("#/")) return "#/home";
-    return value;
+  // Path internal yang sedang ditampilkan, mis. "/settings/pemutaran?tab=audio".
+  function currentPath() {
+    return location.pathname + location.search;
   }
 
-  function parseHash(hash) {
-    const raw = String(hash || "").replace(/^#\/?/, "");
-    if (!raw) return { name: "home", params: {}, query: {}, raw: "#/home" };
+  function normalizePath(value) {
+    const raw = String(value == null ? "" : value).trim();
+    if (!raw) return "/home";
 
+    // Terima sisa format hash lama (#/home) agar tautan lama tetap berfungsi.
+    const input = raw.startsWith("#/") ? raw.slice(1) : raw;
+    let url;
+    try {
+      url = new URL(input, location.origin);
+    } catch (error) {
+      return "/home";
+    }
+    // Hanya izinkan path di origin sendiri.
+    if (url.origin !== location.origin) return "/home";
+
+    // /index.html (mis. dari bookmark lama atau cache) dibuka sebagai /home.
+    if (url.pathname === "/index.html") return "/home" + url.search;
+
+    const pathname = !url.pathname || url.pathname === "/" ? "/home" : url.pathname;
+    return pathname + url.search;
+  }
+
+  function parsePath(value) {
+    const raw = String(value || "/").split("#")[0];
     const queryIndex = raw.indexOf("?");
-    const pathPart = queryIndex >= 0 ? raw.slice(0, queryIndex) : raw;
+    const pathPart = (queryIndex >= 0 ? raw.slice(0, queryIndex) : raw) || "/";
     const queryPart = queryIndex >= 0 ? raw.slice(queryIndex + 1) : "";
     let segments;
     try {
@@ -198,19 +217,19 @@
       params.key = segments.slice(1).join("/");
     }
 
-    // Halaman detail Pengaturan: #/settings/pemutaran -> params.section.
+    // Halaman detail Pengaturan: /settings/pemutaran -> params.section.
     if (name === "settings" && segments.length > 1) {
       params.section = segments[1];
     }
 
-    return { name, params, query, raw: "#/" + raw };
+    return { name, params, query, raw: pathPart };
   }
 
-  function buildHash(route, query) {
+  function buildPath(route, query) {
     const name = route.name || "home";
-    let hash = "#/" + name;
+    let path = "/" + name;
     if (KEYED_ROUTES.has(name) && route.params && route.params.key != null) {
-      hash += "/" + encodeURIComponent(route.params.key);
+      path += "/" + encodeURIComponent(route.params.key);
     }
     const params = new URLSearchParams();
     Object.keys(query || {}).forEach((key) => {
@@ -220,12 +239,12 @@
       }
     });
     const queryString = params.toString();
-    if (queryString) hash += "?" + queryString;
-    return hash;
+    if (queryString) path += "?" + queryString;
+    return path;
   }
 
   function routePath(route) {
-    return buildHash(route, route.query || {});
+    return buildPath(route, route.query || {});
   }
 
   function cacheElements() {
@@ -441,7 +460,7 @@
       location.hostname === "localhost" ||
       location.hostname === "127.0.0.1";
     if (!secure) return;
-    navigator.serviceWorker.register("sw.js").catch(function (error) {
+    navigator.serviceWorker.register("/sw.js").catch(function (error) {
       console.warn("[app] service worker gagal didaftarkan:", error);
     });
   }
@@ -478,16 +497,22 @@
      ------------------------------------------------------------------------ */
 
   function initHistory() {
-    const hash = normalizeHash(location.hash);
-    state.history = [hash];
+    // Tautan lama berbentuk /#/home dipindahkan ke /home sebelum render pertama.
+    if (location.hash.startsWith("#/")) {
+      history.replaceState({ appIndex: 0 }, "", normalizePath(location.hash));
+    }
+
+    // Alamat "/" selalu dibuka sebagai /home.
+    const path = normalizePath(currentPath());
+    state.history = [path];
     state.historyIndex = 0;
-    history.replaceState({ appIndex: 0 }, "", hash);
+    history.replaceState({ appIndex: 0 }, "", path);
   }
 
-  function navigate(hash, options) {
+  function navigate(path, options) {
     const opts = options || {};
-    const target = normalizeHash(hash);
-    const same = target === location.hash;
+    const target = normalizePath(path);
+    const same = target === currentPath();
 
     closeSidebar();
     UI.closeMenu();
@@ -514,7 +539,7 @@
   function trackPageView() {
     if (typeof window.va !== "function" || !state.currentRoute) return;
 
-    const path = location.pathname + "#/" + state.currentRoute.name;
+    const path = location.pathname;
     if (path === lastAnalyticsPath) return;
     lastAnalyticsPath = path;
     window.va("pageview", { path: path });
@@ -522,7 +547,7 @@
 
   function renderRoute(options) {
     const opts = options || {};
-    const route = parseHash(location.hash);
+    const route = parsePath(currentPath());
     state.currentRoute = route;
     window.clearTimeout(state.searchOnlineTimer);
 
@@ -668,9 +693,9 @@
     Object.keys(query).forEach((key) => {
       if (query[key] === "" || query[key] == null) delete query[key];
     });
-    const hash = buildHash(state.currentRoute, query);
-    state.history[state.historyIndex] = hash;
-    history.replaceState({ appIndex: state.historyIndex }, "", hash);
+    const path = buildPath(state.currentRoute, query);
+    state.history[state.historyIndex] = path;
+    history.replaceState({ appIndex: state.historyIndex }, "", path);
     refreshView({ keepScroll: true });
   }
 
@@ -711,7 +736,7 @@
       els.sidebarPlaylists.innerHTML = playlists
         .map(
           (playlist) =>
-            '<li><a class="nav-item" href="#/playlist/' +
+            '<li><a class="nav-item" href="/playlist/' +
             encodeURIComponent(playlist.id) +
             '" data-playlist-key="' +
             U.esc(playlist.id) +
@@ -753,23 +778,23 @@
       }
       return;
     }
-    navigate("#/search", { focusSearch: true });
+    navigate("/search", { focusSearch: true });
   }
 
   function setSearchQuery(value) {
     window.clearTimeout(state.searchOnlineTimer);
     const query = cleanSearchQuery(value);
     if (!state.currentRoute || state.currentRoute.name !== "search") {
-      const hash = value ? "#/search?q=" + encodeURIComponent(value) : "#/search";
-      navigate(hash, { focusSearch: true });
+      const path = value ? "/search?q=" + encodeURIComponent(value) : "/search";
+      navigate(path, { focusSearch: true });
       return;
     }
     if (query.length >= 2) prepareSearchOnline(query);
     setSearchInput(value, true);
-    const hash = value ? buildHash(state.currentRoute, { q: value }) : "#/search";
-    state.history[state.historyIndex] = hash;
-    history.replaceState({ appIndex: state.historyIndex }, "", hash);
-    state.currentRoute = parseHash(hash);
+    const path = value ? buildPath(state.currentRoute, { q: value }) : "/search";
+    state.history[state.historyIndex] = path;
+    history.replaceState({ appIndex: state.historyIndex }, "", path);
+    state.currentRoute = parsePath(path);
     const input = $("#searchInput");
     if (input) input.focus();
   }
@@ -1991,10 +2016,10 @@
     const track = P.currentTrack();
     if (!track) return;
     if (track.online) {
-      navigate("#/search?q=" + encodeURIComponent(track.artist));
+      navigate("/search?q=" + encodeURIComponent(track.artist));
       return;
     }
-    navigate("#/artist/" + encodeURIComponent(track.artistKey));
+    navigate("/artist/" + encodeURIComponent(track.artistKey));
   }
 
   function bindSeek() {
@@ -2198,18 +2223,22 @@
 
     window.addEventListener("popstate", (event) => {
       const candidate = event.state && typeof event.state.appIndex === "number" ? event.state.appIndex : -1;
+      // Riwayat lama (#/songs) tetap diarahkan ke path bersih saat tombol kembali dipakai.
+      if (location.hash.startsWith("#/")) {
+        history.replaceState(event.state, "", normalizePath(location.hash));
+      }
+      const path = normalizePath(currentPath());
       let index = candidate;
-      if (index < 0 || index >= state.history.length || state.history[index] !== location.hash) {
-        const found = state.history.lastIndexOf(location.hash);
+      if (index < 0 || index >= state.history.length || state.history[index] !== path) {
+        const found = state.history.lastIndexOf(path);
         if (found >= 0) {
           index = found;
         } else {
-          const fallback = normalizeHash(location.hash);
           state.history = state.history.slice(0, state.historyIndex + 1);
-          state.history.push(fallback);
+          state.history.push(path);
           index = state.history.length - 1;
           // Jangan push state baru di sini; cukup perbarui indeks internal.
-          history.replaceState({ appIndex: index }, "", location.hash || fallback);
+          history.replaceState({ appIndex: index }, "", path);
         }
       }
       state.historyIndex = index;
@@ -2250,11 +2279,28 @@
         return;
       }
 
-      const link = target.closest('a[href^="#/"]');
+      const link = target.closest("a[href]");
       if (link) {
+        const href = link.getAttribute("href") || "";
+        // Hanya link internal berbasis path; anchor (#...) dan berkas dibiarkan.
+        if (!href.startsWith("/") || href.startsWith("//")) return;
+        if (link.hasAttribute("download") || link.target === "_blank") return;
         if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+        let url;
+        try {
+          url = new URL(link.href, location.href);
+        } catch (error) {
+          return;
+        }
+        if (url.origin !== location.origin) return;
+
+        // Path dengan ekstensi (css, js, gambar, audio) bukan halaman aplikasi.
+        const lastSegment = url.pathname.split("/").pop() || "";
+        if (lastSegment.includes(".")) return;
+
         event.preventDefault();
-        navigate(link.getAttribute("href"), { focusSearch: true });
+        navigate(url.pathname + url.search, { focusSearch: true });
       }
     });
 
@@ -2312,16 +2358,16 @@
       case "new-playlist":
         return createPlaylistInteractive();
       case "open-album":
-        if (actionEl.dataset.key) navigate("#/album/" + encodeURIComponent(actionEl.dataset.key));
+        if (actionEl.dataset.key) navigate("/album/" + encodeURIComponent(actionEl.dataset.key));
         return;
       case "open-artist":
-        if (actionEl.dataset.key) navigate("#/artist/" + encodeURIComponent(actionEl.dataset.key));
+        if (actionEl.dataset.key) navigate("/artist/" + encodeURIComponent(actionEl.dataset.key));
         return;
       case "open-playlist":
-        if (actionEl.dataset.key) navigate("#/playlist/" + encodeURIComponent(actionEl.dataset.key));
+        if (actionEl.dataset.key) navigate("/playlist/" + encodeURIComponent(actionEl.dataset.key));
         return;
       case "open-genre":
-        if (actionEl.dataset.key) navigate("#/genre/" + encodeURIComponent(actionEl.dataset.key));
+        if (actionEl.dataset.key) navigate("/genre/" + encodeURIComponent(actionEl.dataset.key));
         return;
       case "play-album":
         return playAlbum(actionEl.dataset.key, false);
@@ -2683,10 +2729,10 @@
     state.searchTimer = window.setTimeout(() => {
       if (!state.currentRoute || state.currentRoute.name !== "search") return;
       AM.Views.updateSearch(raw);
-      const hash = raw ? buildHash(state.currentRoute, { q: raw }) : "#/search";
-      state.history[state.historyIndex] = hash;
-      history.replaceState({ appIndex: state.historyIndex }, "", hash);
-      state.currentRoute = parseHash(hash);
+      const path = raw ? buildPath(state.currentRoute, { q: raw }) : "/search";
+      state.history[state.historyIndex] = path;
+      history.replaceState({ appIndex: state.historyIndex }, "", path);
+      state.currentRoute = parsePath(path);
 
       const query = cleanSearchQuery(raw);
       if (query.length < 2) return;
@@ -3103,7 +3149,7 @@
     const value = String(query || "").trim();
     const params = new URLSearchParams();
     if (value) params.set("q", value);
-    navigate(params.toString() ? "#/search?" + params.toString() : "#/search");
+    navigate(params.toString() ? "/search?" + params.toString() : "/search");
   }
 
   function queueOnlineTrack(trackId) {
@@ -3239,14 +3285,14 @@
         label: "Buka album",
         icon: "disc",
         onSelect: () => {
-          if (track.albumKey) navigate("#/album/" + encodeURIComponent(track.albumKey));
+          if (track.albumKey) navigate("/album/" + encodeURIComponent(track.albumKey));
         }
       },
       {
         label: "Buka artis",
         icon: "user",
         onSelect: () => {
-          if (track.artistKey) navigate("#/artist/" + encodeURIComponent(track.artistKey));
+          if (track.artistKey) navigate("/artist/" + encodeURIComponent(track.artistKey));
         }
       }
     ];
@@ -3299,7 +3345,7 @@
       info.albumKey &&
       !L.getAlbum(info.albumKey)
     ) {
-      navigate("#/albums", { replace: true });
+      navigate("/albums", { replace: true });
       return;
     }
     if (
@@ -3308,7 +3354,7 @@
       info.artistKey &&
       !L.getArtist(info.artistKey)
     ) {
-      navigate("#/artists", { replace: true });
+      navigate("/artists", { replace: true });
       return;
     }
     refreshView({ keepScroll: true });
@@ -3344,7 +3390,7 @@
       {
         label: "Buka artis",
         icon: "user",
-        onSelect: () => navigate("#/artist/" + encodeURIComponent(album.artistKey))
+        onSelect: () => navigate("/artist/" + encodeURIComponent(album.artistKey))
       },
       "divider",
       {
@@ -3372,7 +3418,7 @@
             state.suppressRefresh = false;
           }
           if (state.currentRoute && state.currentRoute.name === "album" && state.currentRoute.params.key === key) {
-            navigate("#/albums", { replace: true });
+            navigate("/albums", { replace: true });
           } else {
             refreshView({ keepScroll: true });
           }
@@ -3422,7 +3468,7 @@
           if (!ok) return;
           await L.deletePlaylist(id);
           if (state.currentRoute && state.currentRoute.name === "playlist" && state.currentRoute.params.key === id) {
-            navigate("#/home", { replace: true });
+            navigate("/home", { replace: true });
           }
           toast("Playlist dihapus.");
         }
@@ -3450,7 +3496,7 @@
     renderSidebarPlaylists();
     toast("Playlist “" + playlist.name + "” dibuat.", { type: "success" });
     if (opts.navigate !== false) {
-      navigate("#/playlist/" + encodeURIComponent(playlist.id));
+      navigate("/playlist/" + encodeURIComponent(playlist.id));
     }
     return playlist;
   }
@@ -4680,7 +4726,7 @@
       '<p class="about-line">Dibuat dengan HTML, CSS, dan JavaScript murni, ditambah fungsi serverless untuk pencarian dan streaming. <strong>Space</strong> putar/jeda · <strong>←/→</strong> geser 5 detik · <strong>⌘K/Ctrl K</strong> cari · <strong>M</strong> bisukan · <strong>Q</strong> antrean.</p>' +
       '<p class="about-line">Terima kasih untuk proyek open source dan layanan yang membuat Vinyl mungkin. <a href="https://github.com/ZakiMisuchaAndefi/Vinyl#terima-kasih--kredit" target="_blank" rel="noopener noreferrer">Lihat kredit lengkap</a>.</p>' +
       '<div class="settings-profile" data-setting="social">' +
-      '<img class="settings-profile__avatar" src="assets/dev-avatar.jpg" alt="Foto profil Instagram @zzkyand__" width="64" height="64">' +
+      '<img class="settings-profile__avatar" src="/assets/dev-avatar.jpg" alt="Foto profil Instagram @zzkyand__" width="64" height="64">' +
       '<div class="settings-profile__body">' +
       '<span class="settings-profile__name">@zzkyand__</span>' +
       '<span class="settings-profile__role">Pengembang Vinyl</span>' +
@@ -4876,7 +4922,7 @@
   function openSettingsSection(actionEl) {
     const section = actionEl.dataset.section || "";
     state.settingsFocusTarget = actionEl.dataset.focus || "";
-    navigate("#/settings" + (section ? "/" + section : ""));
+    navigate("/settings" + (section ? "/" + section : ""));
   }
 
   // Scroll ke pengaturan tujuan dan sorot sebentar. Dijeda agar tidak
@@ -5113,7 +5159,7 @@
     }
     updateStorageInfo();
     renderSidebarPlaylists();
-    navigate("#/home", { replace: true });
+    navigate("/home", { replace: true });
     toast("Semua data perpustakaan dihapus.", { type: "success" });
   }
 
@@ -5143,7 +5189,7 @@
 
       if (reason === "clear") {
         renderSidebarPlaylists();
-        navigate("#/home", { replace: true });
+        navigate("/home", { replace: true });
         return;
       }
 
@@ -5166,7 +5212,7 @@
           state.currentRoute.name === "playlist" &&
           state.currentRoute.params.key === detail.playlistId
         ) {
-          navigate("#/home", { replace: true });
+          navigate("/home", { replace: true });
         }
       }
     });

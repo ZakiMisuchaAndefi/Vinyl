@@ -15,25 +15,25 @@
   "categories": ["music", "entertainment"],
   "icons": [
     {
-      "src": "assets/icons/icon.svg",
+      "src": "/assets/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "assets/icons/icon-192.png",
+      "src": "/assets/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "assets/icons/icon-512.png",
+      "src": "/assets/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "assets/icons/icon-maskable-512.png",
+      "src": "/assets/icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -44,22 +44,22 @@
       "name": "Cari musik",
       "short_name": "Cari",
       "description": "Cari lagu di YouTube dan perpustakaanmu",
-      "url": "/#/search",
-      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "url": "/search",
+      "icons": [{ "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Semua lagu",
       "short_name": "Lagu",
       "description": "Buka perpustakaan lagu",
-      "url": "/#/songs",
-      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "url": "/songs",
+      "icons": [{ "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Lagu yang disukai",
       "short_name": "Disukai",
       "description": "Buka daftar lagu yang kamu sukai",
-      "url": "/#/favorites",
-      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "url": "/favorites",
+      "icons": [{ "src": "/assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }
