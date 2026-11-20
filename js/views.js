@@ -1193,12 +1193,12 @@
           ? section(
               "Pilihan untukmu",
               '<div class="album-row">' + freshAlbums.map(albumCard).join("") + "</div>",
-              { actions: '<a class="text-btn" href="#/albums">Lihat semua ↗</a>' }
+              { actions: '<a class="text-btn" href="/albums">Lihat semua ↗</a>' }
             )
           : "") +
         (tiles
           ? section("Mulai cepat", tiles, {
-              actions: '<a class="text-btn" href="#/browse">Jelajahi ↗</a>'
+              actions: '<a class="text-btn" href="/browse">Jelajahi ↗</a>'
             })
           : "") +
         '<div id="homeFeed" class="home-feed">' +
@@ -1210,7 +1210,7 @@
               tracklist(recentTracks, { queue: { type: "recent" }, showAlbum: true }),
               {
                 sub: "Lagu lokal yang terakhir kamu dengarkan",
-                actions: '<a class="text-btn" href="#/recent">Lihat semua ↗</a>'
+                actions: '<a class="text-btn" href="/recent">Lihat semua ↗</a>'
               }
             )
           : "") +
@@ -1225,7 +1225,7 @@
           ? section(
               "Disukai",
               tracklist(favorites, { queue: { type: "favorites" }, showAlbum: true }),
-              { actions: '<a class="text-btn" href="#/favorites">Lihat semua ↗</a>' }
+              { actions: '<a class="text-btn" href="/favorites">Lihat semua ↗</a>' }
             )
           : "") +
         "</div>"
@@ -1260,7 +1260,7 @@
               '<button class="btn btn--secondary" type="button" data-action="load-demo">' +
               icon("sparkles") +
               "<span>Muat demo</span></button>" +
-              '<a class="btn btn--secondary" href="#/search">' +
+              '<a class="btn btn--secondary" href="/search">' +
               icon("search") +
               "<span>Cari lagu</span></a>"
           }) +
@@ -1285,12 +1285,12 @@
           : "") +
         (albums.length
           ? section("Album", '<div class="grid">' + albums.map(albumCard).join("") + "</div>", {
-              actions: '<a class="text-btn" href="#/albums">Lihat semua</a>'
+              actions: '<a class="text-btn" href="/albums">Lihat semua</a>'
             })
           : "") +
         (artists.length
           ? section("Artis", '<div class="artist-grid">' + artists.map(artistRow).join("") + "</div>", {
-              actions: '<a class="text-btn" href="#/artists">Lihat semua</a>'
+              actions: '<a class="text-btn" href="/artists">Lihat semua</a>'
             })
           : "") +
         "</div>"
@@ -1532,7 +1532,7 @@
               '<button class="btn btn--primary" type="button" data-action="shuffle-library">' +
               icon("shuffle") +
               "<span>Putar acak</span></button>" +
-              (albums.length ? '<a class="btn btn--secondary" href="#/albums">Lihat album</a>' : "")
+              (albums.length ? '<a class="btn btn--secondary" href="/albums">Lihat album</a>' : "")
           }) +
           (albums.length
             ? section("Baru ditambahkan", '<div class="grid">' + albums.slice(0, 7).map(albumCard).join("") + "</div>")
@@ -1563,7 +1563,7 @@
           ? section(
               "Baru ditambahkan",
               '<div class="grid">' + albums.slice(0, 7).map(albumCard).join("") + "</div>",
-              { actions: '<a class="text-btn" href="#/albums">Lihat semua</a>' }
+              { actions: '<a class="text-btn" href="/albums">Lihat semua</a>' }
             )
           : "") +
         "</div>"
@@ -1774,8 +1774,8 @@
               title: "Belum ada lagu yang disukai",
               text: "Tekan ikon hati pada lagu mana pun — termasuk lagu YouTube — untuk menyimpannya di sini.",
               actions:
-                '<a class="btn btn--primary" href="#/songs">Jelajahi lagu</a>' +
-                '<a class="btn btn--secondary" href="#/search">' +
+                '<a class="btn btn--primary" href="/songs">Jelajahi lagu</a>' +
+                '<a class="btn btn--secondary" href="/search">' +
                 icon("search") +
                 "<span>Cari lagu</span></a>"
             })) +
@@ -2232,7 +2232,7 @@
         '<div class="page page--panel page--settings">' +
         '<header class="settings-head">' +
         (meta
-          ? '<a class="settings-back" href="#/settings">' +
+          ? '<a class="settings-back" href="/settings">' +
             icon("chevron-left") +
             "<span>Pengaturan</span></a>"
           : "") +
@@ -2263,8 +2263,8 @@
           title: "Halaman tidak ditemukan",
           text: "Tautan yang kamu buka mungkin sudah tidak tersedia, atau album/playlist telah dihapus.",
           actions:
-            '<a class="btn btn--primary" href="#/home">Kembali ke Dengarkan Sekarang</a>' +
-            '<a class="btn btn--secondary" href="#/songs">Lihat semua lagu</a>'
+            '<a class="btn btn--primary" href="/home">Kembali ke Dengarkan Sekarang</a>' +
+            '<a class="btn btn--secondary" href="/songs">Lihat semua lagu</a>'
         }) +
         "</div>"
     };

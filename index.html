@@ -22,18 +22,18 @@
   <meta name="twitter:title" content="Vinyl — Musik Streaming di Browser">
   <meta name="twitter:description" content="Putar dan unduh lagu dari internet, termasuk FLAC lossless, langsung di browser. Tanpa pemasangan, tanpa akun, tanpa iklan.">
   <meta name="twitter:image" content="https://vinyl.my.id/assets/logo-vinyl.png">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/sidebar.css">
-  <link rel="stylesheet" href="css/content.css">
-  <link rel="stylesheet" href="css/player.css">
-  <link rel="stylesheet" href="css/overlays.css">
-  <link rel="stylesheet" href="css/responsive.css">
-  <link rel="stylesheet" href="css/onboarding.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/sidebar.css">
+  <link rel="stylesheet" href="/css/content.css">
+  <link rel="stylesheet" href="/css/player.css">
+  <link rel="stylesheet" href="/css/overlays.css">
+  <link rel="stylesheet" href="/css/responsive.css">
+  <link rel="stylesheet" href="/css/onboarding.css">
 </head>
 <body>
   <a class="skip-link" href="#view">Lompat ke konten</a>
@@ -42,9 +42,9 @@
     <div class="app__shell">
       <aside class="sidebar" id="sidebar" aria-label="Sidebar navigasi">
         <div class="sidebar__brand">
-          <a class="brand" href="#/home" aria-label="Vinyl — Dengarkan Sekarang">
+          <a class="brand" href="/home" aria-label="Vinyl — Dengarkan Sekarang">
             <span class="brand__mark" aria-hidden="true">
-              <img src="assets/logo-vinyl.png" alt="" width="44" height="44" decoding="async">
+              <img src="/assets/logo-vinyl.png" alt="" width="44" height="44" decoding="async">
             </span>
             <span class="brand__text">Vinyl</span>
           </a>
@@ -62,25 +62,25 @@
         <nav class="sidebar__nav" aria-label="Navigasi utama">
           <ul class="nav-list">
             <li>
-              <a class="nav-item" href="#/home" data-nav="home">
+              <a class="nav-item" href="/home" data-nav="home">
                 <svg class="icon" aria-hidden="true"><use href="#i-home"></use></svg>
                 <span>Dengarkan Sekarang</span>
               </a>
             </li>
             <li>
-              <a class="nav-item" href="#/browse" data-nav="browse">
+              <a class="nav-item" href="/browse" data-nav="browse">
                 <svg class="icon" aria-hidden="true"><use href="#i-compass"></use></svg>
                 <span>Jelajahi</span>
               </a>
             </li>
             <li>
-              <a class="nav-item" href="#/radio" data-nav="radio">
+              <a class="nav-item" href="/radio" data-nav="radio">
                 <svg class="icon" aria-hidden="true"><use href="#i-radio"></use></svg>
                 <span>Radio</span>
               </a>
             </li>
             <li>
-              <a class="nav-item" href="#/settings" data-nav="settings">
+              <a class="nav-item" href="/settings" data-nav="settings">
                 <svg class="icon" aria-hidden="true"><use href="#i-settings"></use></svg>
                 <span>Pengaturan</span>
               </a>
@@ -93,31 +93,31 @@
             </div>
             <ul class="nav-list">
               <li>
-                <a class="nav-item" href="#/recent" data-nav="recent">
+                <a class="nav-item" href="/recent" data-nav="recent">
                   <svg class="icon" aria-hidden="true"><use href="#i-moon"></use></svg>
                   <span>Riwayat</span>
                 </a>
               </li>
               <li>
-                <a class="nav-item" href="#/artists" data-nav="artists">
+                <a class="nav-item" href="/artists" data-nav="artists">
                   <svg class="icon" aria-hidden="true"><use href="#i-user"></use></svg>
                   <span>Artis</span>
                 </a>
               </li>
               <li>
-                <a class="nav-item" href="#/albums" data-nav="albums">
+                <a class="nav-item" href="/albums" data-nav="albums">
                   <svg class="icon" aria-hidden="true"><use href="#i-disc"></use></svg>
                   <span>Album</span>
                 </a>
               </li>
               <li>
-                <a class="nav-item" href="#/songs" data-nav="songs">
+                <a class="nav-item" href="/songs" data-nav="songs">
                   <svg class="icon" aria-hidden="true"><use href="#i-music"></use></svg>
                   <span>Lagu</span>
                 </a>
               </li>
               <li>
-                <a class="nav-item" href="#/favorites" data-nav="favorites">
+                <a class="nav-item" href="/favorites" data-nav="favorites">
                   <svg class="icon" aria-hidden="true"><use href="#i-heart"></use></svg>
                   <span>Suka</span>
                 </a>
@@ -461,27 +461,27 @@
     </defs>
   </svg>
 
-  <script src="js/analytics.js" defer></script>
+  <script src="/js/analytics.js" defer></script>
   <script defer src="/_vercel/insights/script.js"></script>
-  <script src="js/utils.js" defer></script>
-  <script src="js/vendor/pinyin-pro.js" defer></script>
-  <script src="js/romanize.js" defer></script>
-  <script src="js/db.js" defer></script>
-  <script src="js/metadata.js" defer></script>
-  <script src="js/demo.js" defer></script>
-  <script src="js/online.js" defer></script>
-  <script src="js/youtube.js" defer></script>
-  <script src="js/lossless.js" defer></script>
-  <script src="js/downloads.js" defer></script>
-  <script src="js/home.js" defer></script>
-  <script src="js/library.js" defer></script>
-  <script src="js/media.js" defer></script>
-  <script src="js/audiolab.js" defer></script>
-  <script src="js/player.js" defer></script>
-  <script src="js/lyrics.js" defer></script>
-  <script src="js/ui.js" defer></script>
-  <script src="js/views.js" defer></script>
-  <script src="js/onboarding.js" defer></script>
-  <script src="js/app.js" defer></script>
+  <script src="/js/utils.js" defer></script>
+  <script src="/js/vendor/pinyin-pro.js" defer></script>
+  <script src="/js/romanize.js" defer></script>
+  <script src="/js/db.js" defer></script>
+  <script src="/js/metadata.js" defer></script>
+  <script src="/js/demo.js" defer></script>
+  <script src="/js/online.js" defer></script>
+  <script src="/js/youtube.js" defer></script>
+  <script src="/js/lossless.js" defer></script>
+  <script src="/js/downloads.js" defer></script>
+  <script src="/js/home.js" defer></script>
+  <script src="/js/library.js" defer></script>
+  <script src="/js/media.js" defer></script>
+  <script src="/js/audiolab.js" defer></script>
+  <script src="/js/player.js" defer></script>
+  <script src="/js/lyrics.js" defer></script>
+  <script src="/js/ui.js" defer></script>
+  <script src="/js/views.js" defer></script>
+  <script src="/js/onboarding.js" defer></script>
+  <script src="/js/app.js" defer></script>
 </body>
 </html>
