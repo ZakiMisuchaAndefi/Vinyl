@@ -3,7 +3,58 @@
   "version": "1.0.0",
   "private": true,
   "description": "Pemutar musik streaming bergaya semi-Apple Music di browser, lengkap dengan FLAC lossless dan unduhan langsung dari browser.",
+  "author": "ZakiMisuchaAndefi",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis",
+    "dist:portable": "electron-builder --win portable"
+  },
   "dependencies": {
     "@vercel/analytics": "^2.0.1"
+  },
+  "devDependencies": {
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "id.vinyl.desktop",
+    "productName": "Vinyl",
+    "copyright": "Copyright © 2026 Vinyl",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "index.html",
+      "manifest.webmanifest",
+      "sw.js",
+      "css/**/*",
+      "js/**/*",
+      "assets/**/*",
+      "api/**/*",
+      "electron/**/*",
+      "build/icon.ico",
+      "!node_modules/**/*",
+      "!**/*.map"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Vinyl",
+      "artifactName": "Vinyl-Setup-${version}.${ext}"
+    }
   }
 }
