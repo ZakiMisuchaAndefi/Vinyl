@@ -1,5 +1,6 @@
 {
   "regions": ["sin1"],
+  "installCommand": "npm install --omit=dev",
   "functions": {
     "api/*.js": { "maxDuration": 60 }
   },

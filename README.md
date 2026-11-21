@@ -64,6 +64,18 @@ Lalu buka **http://127.0.0.1:4173/**.
 
 Tekan `Ctrl+C` di jendela PowerShell untuk menghentikan server.
 
+### Aplikasi desktop Windows (opsional)
+
+Vinyl juga bisa dipasang sebagai aplikasi Windows. Versi desktop membawa seluruh antarmuka dan server API lokal di dalam aplikasi, jadi perpustakaan, pengaturan, dan tampilan tetap berjalan tanpa internet; pencarian dan streaming audio tetap memerlukan koneksi.
+
+```powershell
+npm install
+npm start        # menjalankan aplikasi tanpa installer
+npm run dist     # membuat installer di dist\Vinyl-Setup-<versi>.exe
+```
+
+Aplikasi memakai server lokal di `http://127.0.0.1:41730` dengan port tetap, sehingga `localStorage` dan IndexedDB tetap awet antar-jalankan. Hanya satu jendela aplikasi yang bisa terbuka; tautan ke luar dibuka di browser default. Installer dibuat dengan electron-builder (NSIS, per pengguna) dan ikon diambil dari `assets/icons/icon-512.png` lewat `scripts/make-icon.ps1`.
+
 ### Vercel
 
 Repo ini juga siap di-deploy ke **Vercel** tanpa build step:
