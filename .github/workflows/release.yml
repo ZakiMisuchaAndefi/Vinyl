@@ -69,14 +69,18 @@ jobs:
       - name: Pasang dependensi
         run: npm ci
 
-      # Langkah ini hanya berjalan bila secret sertifikat tersedia. Tanpa
-      # sertifikat, build tetap dibuat tetapi belum ditandatangani.
+      # Langkah ini tetap berjalan, tetapi isinya dilewati bila secret
+      # sertifikat belum diisi. Tanpa sertifikat, build tetap dibuat dengan
+      # tanda tangan ad-hoc.
       - name: Siapkan sertifikat macOS (opsional)
-        if: ${{ secrets.MAC_CERTIFICATE_P12 != '' }}
         env:
           CERT_BASE64: ${{ secrets.MAC_CERTIFICATE_P12 }}
           CERT_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
         run: |
+          if [ -z "$CERT_BASE64" ] || [ -z "$CERT_PASSWORD" ]; then
+            echo "Sertifikat tidak disediakan; build akan ditandatangani ad-hoc."
+            exit 0
+          fi
           KEYCHAIN="$RUNNER_TEMP/vinyl-signing.keychain-db"
           echo "$CERT_BASE64" | base64 --decode > "$RUNNER_TEMP/vinyl-cert.p12"
           security create-keychain -p actions "$KEYCHAIN"
@@ -91,12 +95,15 @@ jobs:
       # Notarization juga opsional; tanpa kredensial Apple, electron-builder
       # melewatinya dengan peringatan.
       - name: Siapkan notarization (opsional)
-        if: ${{ secrets.APPLE_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' }}
         env:
           APPLE_ID_VALUE: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD_VALUE: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_VALUE: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          if [ -z "$APPLE_ID_VALUE" ] || [ -z "$APPLE_PASSWORD_VALUE" ] || [ -z "$APPLE_TEAM_VALUE" ]; then
+            echo "Kredensial Apple tidak lengkap; notarization dilewati."
+            exit 0
+          fi
           echo "APPLE_ID=$APPLE_ID_VALUE" >> "$GITHUB_ENV"
           echo "APPLE_APP_SPECIFIC_PASSWORD=$APPLE_PASSWORD_VALUE" >> "$GITHUB_ENV"
           echo "APPLE_TEAM_ID=$APPLE_TEAM_VALUE" >> "$GITHUB_ENV"
