@@ -119,7 +119,14 @@
     nowPlayingOpen: false,
     nowPlayingCloseTimer: 0,
     settingsFocusTarget: "",
-    lastTimeDetail: null
+    lastTimeDetail: null,
+    desktopUpdate: {
+      status: "idle",
+      version: "",
+      percent: 0,
+      message: ""
+    },
+    desktopUpdateSilent: false
   };
 
   // PWA: simpan event pemasangan agar bisa dipicu dari Pengaturan → Tentang.
@@ -390,6 +397,7 @@
     updateStorageInfo();
     renderRoute({ focusSearch: true });
     registerServiceWorker();
+    initDesktopUpdates();
 
     // Intro pertama hanya muncul sekali; setelah selesai nama dipakai Beranda.
     if (AM.Onboarding && typeof AM.Onboarding.init === "function") {
@@ -453,6 +461,18 @@
     return /iphone|ipad|ipod/i.test(navigator.userAgent);
   }
 
+  // Aplikasi Windows menyediakan jembatan terbatas lewat electron/preload.js.
+  function isDesktopApp() {
+    return !!(window.vinylDesktop && window.vinylDesktop.isDesktop);
+  }
+
+  function desktopVersionLabel() {
+    const raw = String((window.vinylDesktop && window.vinylDesktop.version) || "").trim();
+    // 1.0.0 ditampilkan sebagai "Vinyl 1.0", sedangkan 1.0.1 tetap lengkap.
+    const short = raw ? raw.replace(/\.0$/, "") : "";
+    return short ? "Vinyl " + short : "Vinyl";
+  }
+
   function registerServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
     const secure =
@@ -490,6 +510,270 @@
         button.textContent = "Terpasang";
       }
     }
+  }
+
+  /* ------------------------------------------------------------------------
+     Pembaruan aplikasi desktop
+     ------------------------------------------------------------------------ */
+
+  function desktopUpdateText(update) {
+    switch (update.status) {
+      case "checking":
+        return "Memeriksa pembaruan…";
+      case "available":
+        return (
+          "Pembaruan " +
+          (update.version || "baru") +
+          " tersedia. Unduh lalu pasang tanpa membuka browser."
+        );
+      case "downloading":
+        return "Mengunduh pembaruan… " + Math.round(update.percent) + "%";
+      case "downloaded":
+        return (
+          "Pembaruan " +
+          (update.version || "baru") +
+          " siap dipasang. Vinyl akan ditutup dan dibuka lagi."
+        );
+      case "not-available":
+        return "Vinyl sudah versi terbaru.";
+      case "installing":
+        return "Memasang pembaruan. Vinyl akan dibuka lagi sebentar.";
+      case "error":
+        return update.message || "Gagal memeriksa pembaruan.";
+      default:
+        return "Aplikasi Windows. Periksa pembaruan untuk mendapatkan versi terbaru.";
+    }
+  }
+
+  function desktopUpdateAction(update) {
+    if (update.status === "available") return "update-download";
+    if (update.status === "downloaded") return "update-install";
+    return "update-check";
+  }
+
+  function desktopUpdateButtonLabel(update) {
+    switch (update.status) {
+      case "checking":
+        return "Memeriksa…";
+      case "available":
+        return "Unduh pembaruan";
+      case "downloading":
+        return "Mengunduh…";
+      case "downloaded":
+        return "Pasang & mulai ulang";
+      case "installing":
+        return "Memasang…";
+      case "not-available":
+        return "Cek lagi";
+      case "error":
+        return "Coba lagi";
+      default:
+        return "Cek pembaruan";
+    }
+  }
+
+  function settingsDesktopUpdateRow() {
+    const update = state.desktopUpdate;
+    const busy =
+      update.status === "checking" ||
+      update.status === "downloading" ||
+      update.status === "installing";
+    return (
+      '<div class="settings-row" data-setting="update"><div class="settings-row__text">' +
+      '<div class="settings-row__title">' +
+      U.esc(desktopVersionLabel()) +
+      "</div>" +
+      '<div class="settings-row__sub" data-update-sub>' +
+      U.esc(desktopUpdateText(update)) +
+      "</div></div>" +
+      '<div class="settings-row__action"><button class="btn btn--ghost btn--small" type="button" data-action="' +
+      desktopUpdateAction(update) +
+      '" data-update-button' +
+      (busy ? " disabled" : "") +
+      ">" +
+      U.esc(desktopUpdateButtonLabel(update)) +
+      "</button></div></div>"
+    );
+  }
+
+  // Perbarui baris yang sedang tampil tanpa membangun ulang seluruh halaman.
+  function paintDesktopUpdate() {
+    const root = settingsRoot();
+    if (!root) return;
+    const row = root.querySelector('[data-setting="update"]');
+    if (!row) return;
+    const update = state.desktopUpdate;
+    const sub = row.querySelector("[data-update-sub]");
+    if (sub) sub.textContent = desktopUpdateText(update);
+    const button = row.querySelector("[data-update-button]");
+    if (!button) return;
+    button.dataset.action = desktopUpdateAction(update);
+    button.textContent = desktopUpdateButtonLabel(update);
+    button.disabled =
+      update.status === "checking" ||
+      update.status === "downloading" ||
+      update.status === "installing";
+  }
+
+  function handleDesktopUpdateEvent(event) {
+    if (!event || !event.type) return;
+    const update = state.desktopUpdate;
+
+    if (event.type === "available") {
+      const wasAvailable = update.status === "available";
+      update.status = "available";
+      update.version = event.version || "";
+      paintDesktopUpdate();
+      if (!wasAvailable) {
+        toast("Pembaruan " + (update.version || "Vinyl") + " tersedia.", {
+          icon: "info",
+          duration: 9000,
+          action: {
+            label: "Lihat",
+            onClick: function () {
+              navigate("/settings/tentang");
+            }
+          }
+        });
+      }
+      return;
+    }
+
+    if (event.type === "not-available") {
+      update.status = "not-available";
+      update.version = event.version || "";
+      paintDesktopUpdate();
+      return;
+    }
+
+    if (event.type === "progress") {
+      update.status = "downloading";
+      update.percent = Number(event.percent) || 0;
+      paintDesktopUpdate();
+      return;
+    }
+
+    if (event.type === "downloaded") {
+      update.status = "downloaded";
+      update.version = event.version || update.version;
+      update.percent = 100;
+      paintDesktopUpdate();
+      toast('Pembaruan siap dipasang. Klik "Pasang & mulai ulang" di Pengaturan.', {
+        icon: "check",
+        duration: 10000,
+        action: { label: "Pasang", onClick: installDesktopUpdate }
+      });
+      return;
+    }
+
+    if (event.type === "error") {
+      // Pemeriksaan otomatis yang gagal (mis. sedang offline) tidak perlu
+      // mengganggu pengguna dengan notifikasi.
+      if (state.desktopUpdateSilent && update.status === "checking") {
+        update.status = "idle";
+        paintDesktopUpdate();
+        return;
+      }
+      update.status = "error";
+      update.message = event.message || "Gagal memeriksa pembaruan.";
+      paintDesktopUpdate();
+      toast(update.message, { type: "error", duration: 7000 });
+    }
+  }
+
+  async function checkDesktopUpdates(options) {
+    if (!isDesktopApp()) return;
+    const update = state.desktopUpdate;
+    if (
+      update.status === "checking" ||
+      update.status === "downloading" ||
+      update.status === "installing"
+    ) {
+      return;
+    }
+
+    state.desktopUpdateSilent = !!(options && options.silent);
+    update.status = "checking";
+    update.message = "";
+    paintDesktopUpdate();
+
+    let result = null;
+    try {
+      result = await window.vinylDesktop.checkForUpdates();
+    } catch (error) {
+      result = { ok: false, error: "Gagal memeriksa pembaruan. Coba lagi nanti." };
+    } finally {
+      state.desktopUpdateSilent = false;
+    }
+
+    if (!result || result.ok) return;
+    if (update.status !== "checking") return;
+
+    update.status = "error";
+    update.message = result.error || "Gagal memeriksa pembaruan.";
+    paintDesktopUpdate();
+    toast(update.message, { type: "error", duration: 7000 });
+  }
+
+  async function downloadDesktopUpdate() {
+    if (!isDesktopApp()) return;
+    const update = state.desktopUpdate;
+    if (update.status !== "available") return;
+
+    update.status = "downloading";
+    update.percent = 0;
+    paintDesktopUpdate();
+
+    let result = null;
+    try {
+      result = await window.vinylDesktop.downloadUpdate();
+    } catch (error) {
+      result = { ok: false, error: "Gagal mengunduh pembaruan. Coba lagi nanti." };
+    }
+
+    if (!result || result.ok) return;
+    if (update.status !== "downloading") return;
+
+    update.status = "error";
+    update.message = result.error || "Gagal mengunduh pembaruan.";
+    paintDesktopUpdate();
+    toast(update.message, { type: "error", duration: 7000 });
+  }
+
+  async function installDesktopUpdate() {
+    if (!isDesktopApp()) return;
+    const update = state.desktopUpdate;
+    if (update.status !== "downloaded") return;
+
+    update.status = "installing";
+    paintDesktopUpdate();
+
+    let result = null;
+    try {
+      result = await window.vinylDesktop.installUpdate();
+    } catch (error) {
+      result = { ok: false, error: "Gagal memasang pembaruan." };
+    }
+
+    if (result && result.ok) return; // aplikasi akan ditutup oleh proses utama
+
+    update.status = "downloaded";
+    paintDesktopUpdate();
+    toast((result && result.error) || "Gagal memasang pembaruan.", {
+      type: "error",
+      duration: 7000
+    });
+  }
+
+  function initDesktopUpdates() {
+    if (!isDesktopApp()) return;
+    if (typeof window.vinylDesktop.onUpdateEvent === "function") {
+      window.vinylDesktop.onUpdateEvent(handleDesktopUpdateEvent);
+    }
+    // Pemeriksaan pertama berjalan diam-diam supaya tidak mengganggu onboarding.
+    window.setTimeout(function () {
+      checkDesktopUpdates({ silent: true });
+    }, 7000);
   }
 
   /* ------------------------------------------------------------------------
@@ -2586,6 +2870,12 @@
       }
       case "install-app":
         return installApp(actionEl);
+      case "update-check":
+        return checkDesktopUpdates();
+      case "update-download":
+        return downloadDesktopUpdate();
+      case "update-install":
+        return installDesktopUpdate();
       case "settings-open":
         return openSettingsSection(actionEl);
       case "edit-name":
@@ -4369,7 +4659,7 @@
       title: "Tentang",
       desc: "Pintasan, kredit, dan informasi aplikasi.",
       summary: function () {
-        return "Pintasan keyboard · kredit open source";
+        return "Versi aplikasi · pintasan keyboard · kredit open source";
       }
     }
   ];
@@ -4405,7 +4695,9 @@
     { id: "demo", label: "Perpustakaan demo", section: "data", keywords: "demo contoh lagu percobaan" },
     { id: "storage", label: "Penyimpanan", section: "data", keywords: "penyimpanan storage kuota indexeddb memori data" },
     { id: "clear", label: "Hapus semua data", section: "data", keywords: "hapus semua data reset bersihkan" },
-    { id: "install", label: "Pasang aplikasi", section: "tentang", keywords: "pasang install pwa aplikasi offline layar utama" },
+    isDesktopApp()
+      ? { id: "update", label: "Versi aplikasi", section: "tentang", keywords: "versi pembaruan update aplikasi windows tentang" }
+      : { id: "install", label: "Pasang aplikasi", section: "tentang", keywords: "pasang install pwa aplikasi offline layar utama" },
     { id: "shortcuts", label: "Pintasan keyboard", section: "tentang", keywords: "pintasan keyboard shortcut bantuan" }
   ];
 
@@ -4691,6 +4983,8 @@
   }
 
   function settingsInstallRow() {
+    if (isDesktopApp()) return settingsDesktopUpdateRow();
+
     if (isStandaloneApp()) {
       return (
         '<div class="settings-row" data-setting="install"><div class="settings-row__text"><div class="settings-row__title">Vinyl sudah terpasang</div><div class="settings-row__sub">Aplikasi berjalan di layar penuh. Buka lagi lewat ikon Vinyl di layar utama.</div></div>' +

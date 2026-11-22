@@ -76,6 +76,21 @@ npm run dist     # membuat installer di dist\Vinyl-Setup-<versi>.exe
 
 Aplikasi memakai server lokal di `http://127.0.0.1:41730` dengan port tetap, sehingga `localStorage` dan IndexedDB tetap awet antar-jalankan. Hanya satu jendela aplikasi yang bisa terbuka; tautan ke luar dibuka di browser default. Installer dibuat dengan electron-builder (NSIS, per pengguna) dan ikon diambil dari `assets/icons/icon-512.png` lewat `scripts/make-icon.ps1`.
 
+#### Pembaruan aplikasi
+
+Di **Pengaturan → Tentang** ada baris **Vinyl 1.0** dengan tombol **Cek pembaruan**. Alurnya: periksa → unduh → **Pasang & mulai ulang**. Aplikasi memakai `electron-updater` dan mengambil pembaruan dari **GitHub Releases** repo ini, jadi pengguna tidak perlu mengunduh atau memasang ulang installer secara manual.
+
+Menerbitkan versi baru:
+
+1. Naikkan `version` di `package.json` (mis. `1.0.0` → `1.0.1`), commit, lalu buat tag yang sama: `git tag v1.0.1`.
+2. Push commit dan tag: `git push origin main --tags`.
+3. Workflow `.github/workflows/release.yml` membangun installer dan mengunggahnya ke GitHub Releases.
+4. Pengguna menekan **Cek pembaruan** (atau menunggu pemeriksaan otomatis saat aplikasi dibuka), lalu memasangnya dari dalam aplikasi.
+
+Untuk merilis dari PC sendiri, jalankan `npm run release` dengan `GH_TOKEN` yang memiliki akses `contents: write`.
+
+> Pembaruan pertama hanya bisa dipasang manual: versi 1.0.0 yang sudah terpasang belum membawa `electron-updater`. Setelah build dengan tombol pembaruan ini dipasang sekali, pembaruan berikutnya berjalan dari dalam aplikasi.
+
 ### Vercel
 
 Repo ini juga siap di-deploy ke **Vercel** tanpa build step:
