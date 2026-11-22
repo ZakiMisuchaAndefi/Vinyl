@@ -8,10 +8,12 @@
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder --win nsis",
-    "dist:portable": "electron-builder --win portable"
+    "dist:portable": "electron-builder --win portable",
+    "release": "electron-builder --win nsis --publish always"
   },
   "dependencies": {
-    "@vercel/analytics": "^2.0.1"
+    "@vercel/analytics": "^2.0.1",
+    "electron-updater": "^6.8.11"
   },
   "devDependencies": {
     "electron": "^45.4.1",
@@ -35,14 +37,21 @@
       "api/**/*",
       "electron/**/*",
       "build/icon.ico",
-      "!node_modules/**/*",
       "!**/*.map"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "ZakiMisuchaAndefi",
+      "repo": "Vinyl",
+      "releaseType": "release"
+    },
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico"
