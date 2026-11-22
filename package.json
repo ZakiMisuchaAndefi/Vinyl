@@ -9,7 +9,9 @@
     "start": "electron .",
     "dist": "electron-builder --win nsis",
     "dist:portable": "electron-builder --win portable",
-    "release": "electron-builder --win nsis --publish always"
+    "dist:mac": "electron-builder --mac",
+    "release": "electron-builder --win nsis --publish always",
+    "release:mac": "electron-builder --mac --publish always"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
@@ -27,6 +29,7 @@
       "output": "dist",
       "buildResources": "build"
     },
+    "afterPack": "scripts/after-pack-mac.js",
     "files": [
       "index.html",
       "manifest.webmanifest",
@@ -64,6 +67,48 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Vinyl",
       "artifactName": "Vinyl-Setup-${version}.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "category": "public.app-category.music",
+      "hardenedRuntime": true,
+      "darkModeSupport": true,
+      "artifactName": "Vinyl-${version}-${arch}.${ext}"
+    },
+    "dmg": {
+      "artifactName": "Vinyl-${version}-${arch}.${ext}",
+      "backgroundColor": "#0b0b0d",
+      "window": {
+        "width": 560,
+        "height": 400
+      },
+      "contents": [
+        {
+          "x": 150,
+          "y": 200,
+          "type": "file"
+        },
+        {
+          "x": 410,
+          "y": 200,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
     }
   }
 }

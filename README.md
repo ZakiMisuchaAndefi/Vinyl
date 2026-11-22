@@ -64,9 +64,13 @@ Lalu buka **http://127.0.0.1:4173/**.
 
 Tekan `Ctrl+C` di jendela PowerShell untuk menghentikan server.
 
-### Aplikasi desktop Windows (opsional)
+### Aplikasi desktop Windows & macOS (opsional)
 
-Vinyl juga bisa dipasang sebagai aplikasi Windows. Versi desktop membawa seluruh antarmuka dan server API lokal di dalam aplikasi, jadi perpustakaan, pengaturan, dan tampilan tetap berjalan tanpa internet; pencarian dan streaming audio tetap memerlukan koneksi.
+Vinyl juga bisa dipasang sebagai aplikasi desktop. Versi desktop membawa seluruh antarmuka dan server API lokal di dalam aplikasi, jadi perpustakaan, pengaturan, dan tampilan tetap berjalan tanpa internet; pencarian dan streaming audio tetap memerlukan koneksi.
+
+Aplikasi memakai server lokal di `http://127.0.0.1:41730` dengan port tetap, sehingga `localStorage` dan IndexedDB tetap awet antar-jalankan. Hanya satu jendela aplikasi yang bisa terbuka; tautan ke luar dibuka di browser default.
+
+#### Windows
 
 ```powershell
 npm install
@@ -74,7 +78,35 @@ npm start        # menjalankan aplikasi tanpa installer
 npm run dist     # membuat installer di dist\Vinyl-Setup-<versi>.exe
 ```
 
-Aplikasi memakai server lokal di `http://127.0.0.1:41730` dengan port tetap, sehingga `localStorage` dan IndexedDB tetap awet antar-jalankan. Hanya satu jendela aplikasi yang bisa terbuka; tautan ke luar dibuka di browser default. Installer dibuat dengan electron-builder (NSIS, per pengguna) dan ikon diambil dari `assets/icons/icon-512.png` lewat `scripts/make-icon.ps1`.
+Installer dibuat dengan electron-builder (NSIS, per pengguna) dan ikon diambil dari `assets/icons/icon-512.png` lewat `scripts/make-icon.ps1`.
+
+#### macOS
+
+DMG tidak bisa dibuat dari Windows, jadi build macOS dijalankan di macOS (atau runner `macos-latest` di GitHub Actions):
+
+```bash
+npm install
+npm start          # menjalankan aplikasi tanpa installer
+npm run dist:mac   # membuat DMG + ZIP universal di dist/
+```
+
+Hasilnya `Vinyl-<versi>-universal.dmg` dan ZIP universal untuk Intel maupun Apple Silicon. Ikon diambil dari `build/icon.png` (1024×1024). Di macOS, menu aplikasi memakai menu bar sistem (Tentang, Edit, Tampilan, Jendela), menutup jendela tidak menghentikan aplikasi, dan klik ikon Dock membuka jendela lagi.
+
+Tanpa sertifikat Apple Developer, build hanya ditandatangani ad-hoc dan belum dinotarisasi, jadi macOS tetap bisa menolak saat pertama dibuka. Hapus atribut karantina sekali saja:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Vinyl.app
+```
+
+Build tanpa tanda tangan Developer ID juga belum bisa memakai pembaruan otomatis karena macOS mensyaratkan code signature resmi; pembaruan diunduh manual dari GitHub Releases. Untuk pembaruan otomatis penuh, tambahkan secret repo berikut agar workflow menandatangani dan menotarisasi build:
+
+| Secret | Isi |
+| --- | --- |
+| `MAC_CERTIFICATE_P12` | sertifikat *Developer ID Application* (`.p12`) dalam base64 |
+| `MAC_CERTIFICATE_PASSWORD` | kata sandi file `.p12` |
+| `APPLE_ID` | email akun Apple Developer |
+| `APPLE_APP_SPECIFIC_PASSWORD` | app-specific password akun tersebut |
+| `APPLE_TEAM_ID` | Team ID Apple Developer |
 
 #### Pembaruan aplikasi
 
@@ -84,10 +116,10 @@ Menerbitkan versi baru:
 
 1. Naikkan `version` di `package.json` (mis. `1.0.0` → `1.0.1`), commit, lalu buat tag yang sama: `git tag v1.0.1`.
 2. Push commit dan tag: `git push origin main --tags`.
-3. Workflow `.github/workflows/release.yml` membangun installer dan mengunggahnya ke GitHub Releases.
+3. Workflow `.github/workflows/release.yml` membangun installer Windows dan DMG macOS, lalu mengunggahnya ke GitHub Releases.
 4. Pengguna menekan **Cek pembaruan** (atau menunggu pemeriksaan otomatis saat aplikasi dibuka), lalu memasangnya dari dalam aplikasi.
 
-Untuk merilis dari PC sendiri, jalankan `npm run release` dengan `GH_TOKEN` yang memiliki akses `contents: write`.
+Untuk merilis dari PC sendiri, jalankan `npm run release` dengan `GH_TOKEN` yang memiliki akses `contents: write`. Perintah khusus macOS adalah `npm run release:mac` dan hanya bisa dijalankan di macOS.
 
 > Pembaruan pertama hanya bisa dipasang manual: versi 1.0.0 yang sudah terpasang belum membawa `electron-updater`. Setelah build dengan tombol pembaruan ini dipasang sekali, pembaruan berikutnya berjalan dari dalam aplikasi.
 

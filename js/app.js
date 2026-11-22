@@ -461,9 +461,17 @@
     return /iphone|ipad|ipod/i.test(navigator.userAgent);
   }
 
-  // Aplikasi Windows menyediakan jembatan terbatas lewat electron/preload.js.
+  // Aplikasi desktop menyediakan jembatan terbatas lewat electron/preload.js.
   function isDesktopApp() {
     return !!(window.vinylDesktop && window.vinylDesktop.isDesktop);
+  }
+
+  function desktopPlatformName() {
+    const platform = String((window.vinylDesktop && window.vinylDesktop.platform) || "");
+    if (platform === "darwin") return "macOS";
+    if (platform === "win32") return "Windows";
+    if (platform === "linux") return "Linux";
+    return "";
   }
 
   function desktopVersionLabel() {
@@ -541,7 +549,9 @@
       case "error":
         return update.message || "Gagal memeriksa pembaruan.";
       default:
-        return "Aplikasi Windows. Periksa pembaruan untuk mendapatkan versi terbaru.";
+        return desktopPlatformName()
+          ? "Aplikasi " + desktopPlatformName() + ". Periksa pembaruan untuk mendapatkan versi terbaru."
+          : "Periksa pembaruan untuk mendapatkan versi terbaru.";
     }
   }
 
