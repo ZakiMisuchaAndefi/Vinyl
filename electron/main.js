@@ -21,6 +21,8 @@ const APP_URL = "http://127.0.0.1:" + PORT + "/";
 const APP_ORIGIN = "http://127.0.0.1:" + PORT;
 // Sama dengan appId di package.json: menyatukan ikon taskbar dan pintasan.
 const APP_ID = "id.vinyl.desktop";
+// Beberapa perilaku memang harus berbeda di macOS (menu, tutup jendela).
+const isMac = process.platform === "darwin";
 
 app.setAppUserModelId(APP_ID);
 
@@ -48,6 +50,71 @@ if (!gotLock) {
 }
 
 /* --------------------------------------------------------------------------
+   Menu
+
+   Windows memakai menu bawaan yang disembunyikan (Alt masih bisa membukanya).
+   macOS selalu menampilkan menu bar aplikasi, jadi menu dibuat minimal namun
+   lengkap agar pintasan penting seperti Salin/Tempel dan Keluar tetap ada.
+   -------------------------------------------------------------------------- */
+
+function installMenu() {
+  if (!isMac) {
+    Menu.setApplicationMenu(null);
+    return;
+  }
+
+  const template = [
+    {
+      label: "Vinyl",
+      submenu: [
+        { role: "about", label: "Tentang Vinyl" },
+        { type: "separator" },
+        { role: "hide", label: "Sembunyikan Vinyl" },
+        { role: "hideOthers", label: "Sembunyikan Lainnya" },
+        { role: "unhide", label: "Tampilkan Semua" },
+        { type: "separator" },
+        { role: "quit", label: "Keluar dari Vinyl" }
+      ]
+    },
+    {
+      label: "Edit",
+      submenu: [
+        { role: "undo", label: "Batalkan" },
+        { role: "redo", label: "Ulangi" },
+        { type: "separator" },
+        { role: "cut", label: "Potong" },
+        { role: "copy", label: "Salin" },
+        { role: "paste", label: "Tempel" },
+        { role: "selectAll", label: "Pilih Semua" }
+      ]
+    },
+    {
+      label: "Tampilan",
+      submenu: [
+        { role: "reload", label: "Muat Ulang" },
+        { type: "separator" },
+        { role: "resetZoom", label: "Ukuran Asli" },
+        { role: "zoomIn", label: "Perbesar" },
+        { role: "zoomOut", label: "Perkecil" },
+        { type: "separator" },
+        { role: "togglefullscreen", label: "Layar Penuh" }
+      ]
+    },
+    {
+      label: "Jendela",
+      submenu: [
+        { role: "minimize", label: "Perkecil" },
+        { role: "zoom", label: "Perbesar" },
+        { type: "separator" },
+        { role: "front", label: "Bawa Semua ke Depan" }
+      ]
+    }
+  ];
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+/* --------------------------------------------------------------------------
    Jendela
    -------------------------------------------------------------------------- */
 
@@ -61,7 +128,8 @@ function createWindow() {
     backgroundColor: "#0b0b0d",
     show: false,
     autoHideMenuBar: true,
-    icon: path.join(__dirname, "..", "build", "icon.ico"),
+    // Ikon jendela hanya dipakai Windows/Linux; macOS memakai ikon bundel.
+    icon: isMac ? undefined : path.join(__dirname, "..", "build", "icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -72,8 +140,7 @@ function createWindow() {
     }
   });
 
-  // Menu bawaan Electron (File/Edit/View) tidak diperlukan.
-  Menu.setApplicationMenu(null);
+  installMenu();
 
   mainWindow.once("ready-to-show", function () {
     if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -176,6 +243,12 @@ function updateErrorMessage(error) {
   if (/net::|ENOTFOUND|EAI_AGAIN|ECONN|network|internet|timeout|socket/i.test(text)) {
     return "Tidak bisa memeriksa pembaruan. Periksa koneksi internet.";
   }
+  // macOS hanya mengizinkan pembaruan otomatis untuk aplikasi yang
+  // ditandatangani (code signature). Build tanpa sertifikat tetap bisa
+  // dipakai, tetapi pembaruan harus diunduh manual.
+  if (/code signature|not signed|code signing|signature/i.test(text)) {
+    return "Pembaruan otomatis belum tersedia untuk versi ini. Unduh versi terbaru secara manual.";
+  }
   return "Gagal memeriksa pembaruan. Coba lagi nanti.";
 }
 
@@ -267,6 +340,13 @@ function fail(message, detail) {
 }
 
 app.whenReady().then(function () {
+  app.setAboutPanelOptions({
+    applicationName: "Vinyl",
+    applicationVersion: app.getVersion(),
+    version: app.getVersion(),
+    copyright: "Copyright © 2026 Vinyl"
+  });
+
   // Tolak permintaan izin yang tidak dipakai aplikasi (kamera, mikrofon, dsb).
   session.defaultSession.setPermissionRequestHandler(function (contents, permission, callback) {
     callback(permission === "fullscreen" || permission === "clipboard-sanitized-write");
@@ -296,11 +376,14 @@ app.whenReady().then(function () {
     });
 
   app.on("activate", function () {
+    // Di macOS, klik ikon Dock saat semua jendela tertutup membuka lagi.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
 
 app.on("window-all-closed", function () {
+  // macOS lazim membiarkan aplikasi hidup tanpa jendela.
+  if (isMac) return;
   app.quit();
 });
 

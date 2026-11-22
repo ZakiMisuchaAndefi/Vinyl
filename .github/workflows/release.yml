@@ -1,4 +1,4 @@
-name: Rilis Vinyl Windows
+name: Rilis Vinyl
 
 on:
   push:
@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  windows:
     runs-on: windows-latest
     steps:
       - name: Ambil kode
@@ -42,3 +42,66 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+  macos:
+    # Dijalankan setelah Windows supaya kedua job tidak membuat GitHub
+    # Release untuk tag yang sama secara bersamaan.
+    needs: windows
+    runs-on: macos-latest
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Siapkan Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Cocokkan tag dengan versi
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} tidak cocok dengan versi package.json (${version})." >&2
+            exit 1
+          fi
+
+      - name: Pasang dependensi
+        run: npm ci
+
+      # Langkah ini hanya berjalan bila secret sertifikat tersedia. Tanpa
+      # sertifikat, build tetap dibuat tetapi belum ditandatangani.
+      - name: Siapkan sertifikat macOS (opsional)
+        if: ${{ secrets.MAC_CERTIFICATE_P12 != '' }}
+        env:
+          CERT_BASE64: ${{ secrets.MAC_CERTIFICATE_P12 }}
+          CERT_PASSWORD: ${{ secrets.MAC_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN="$RUNNER_TEMP/vinyl-signing.keychain-db"
+          echo "$CERT_BASE64" | base64 --decode > "$RUNNER_TEMP/vinyl-cert.p12"
+          security create-keychain -p actions "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p actions "$KEYCHAIN"
+          security import "$RUNNER_TEMP/vinyl-cert.p12" -k "$KEYCHAIN" -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k actions "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" $(security list-keychains -d user | tr -d '"')
+          echo "CSC_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+          echo "CSC_IDENTITY_AUTO_DISCOVERY=true" >> "$GITHUB_ENV"
+
+      # Notarization juga opsional; tanpa kredensial Apple, electron-builder
+      # melewatinya dengan peringatan.
+      - name: Siapkan notarization (opsional)
+        if: ${{ secrets.APPLE_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' }}
+        env:
+          APPLE_ID_VALUE: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD_VALUE: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_VALUE: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          echo "APPLE_ID=$APPLE_ID_VALUE" >> "$GITHUB_ENV"
+          echo "APPLE_APP_SPECIFIC_PASSWORD=$APPLE_PASSWORD_VALUE" >> "$GITHUB_ENV"
+          echo "APPLE_TEAM_ID=$APPLE_TEAM_VALUE" >> "$GITHUB_ENV"
+
+      - name: Bangun dan terbitkan DMG
+        run: npm run release:mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
