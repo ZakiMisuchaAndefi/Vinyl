@@ -18,7 +18,7 @@
 
 ---
 
-## Mau dengerin? :3
+## Mau dengerin? (●'◡'●)
 
 1. **Paling gampang** — buka **[vinyl.my.id](https://vinyl.my.id)**, cari lagu, putar. Nggak perlu install apa pun.
 2. **Mau aplikasi desktop?** Ambil di [releases terbaru](https://github.com/ZakiMisuchaAndefi/Vinyl/releases/latest):
@@ -82,7 +82,7 @@ npm run dist:mac   # macOS DMG + ZIP universal (harus di macOS)
 
 **Boleh fork atau ubah?** Boleh banget, asal kredit ke proyek-proyek di bawah tetap ada.
 
-## Terima kasih <3
+## Terima kasih ☆*: .｡. o(≧▽≦)o .｡.:*☆
 
 Vinyl berdiri di atas kerja orang-orang keren ini. Mampir dan kasih star kalau sempat!
 
@@ -107,4 +107,4 @@ Dan buat kamu yang melaporkan bug, memberi masukan, atau sekadar mampir dengerin
 
 Vinyl adalah proyek pribadi yang dibagikan apa adanya. Tidak berafiliasi dengan YouTube, Apple Music, Monochrome, Invidious, LRCLIB, atau Vercel. Vinyl tidak menyimpan atau meng-host musik; semua audio diambil dari penyedia saat kamu minta. Nama dan merek dagang milik pemiliknya masing-masing.
 
-Dibuat sambil dengerin musik oleh [Zaki Misucha Andefi](https://github.com/ZakiMisuchaAndefi).
+Dibuat sambil dengerin yoasobi full nonstop pake IEM dan format FLAC!! [Zaki Misucha Andefi](https://github.com/ZakiMisuchaAndefi).
