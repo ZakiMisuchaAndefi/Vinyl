@@ -13,7 +13,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Release draf dibuat lebih dulu supaya kedua job build mengunggah ke satu
+  # release yang sama. Tanpa ini, upload paralel electron-builder bisa membuat
+  # dua release untuk tag yang sama.
+  siapkan-rilis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Buat release draf
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag sudah ada; memakai release tersebut."
+          else
+            gh release create "$tag" --draft --verify-tag --title "$version" --notes "Vinyl $version"
+          fi
+
   windows:
+    needs: siapkan-rilis
     runs-on: windows-latest
     steps:
       - name: Ambil kode
@@ -44,8 +66,8 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
   macos:
-    # Dijalankan setelah Windows supaya kedua job tidak membuat GitHub
-    # Release untuk tag yang sama secara bersamaan.
+    # Dijalankan setelah Windows supaya kedua job tidak mengunggah ke release
+    # secara bersamaan.
     needs: windows
     runs-on: macos-latest
     steps:
@@ -112,3 +134,23 @@ jobs:
         run: npm run release:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  terbitkan:
+    # Release tetap draf selama build, lalu dipublikasikan setelah semua aset
+    # dari Windows dan macOS selesai diunggah.
+    needs:
+      - windows
+      - macos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+
+      - name: Publikasikan release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          gh release edit "$tag" --draft=false
+          echo "Aset yang terbit:"
+          gh release view "$tag" --json assets --jq '.assets[].name'
