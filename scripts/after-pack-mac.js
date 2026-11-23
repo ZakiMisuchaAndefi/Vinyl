@@ -21,6 +21,13 @@ exports.default = async function afterPack(context) {
   if (context.electronPlatformName !== "darwin") return;
   if (process.env.CSC_LINK || process.env.CSC_KEYCHAIN) return;
 
+  // Pada build universal, electron-builder memaketkan tiap arsitektur ke
+  // folder sementara (*-temp) lalu menggabungkannya dengan @electron/universal.
+  // Menandatangani app sementara membuat berkas _CodeSignature/CodeResources
+  // berbeda antar-arsitektur sehingga penggabungan gagal. Lewati folder
+  // sementara; app universal hasil gabungan tetap ditandatangani di bawah.
+  if (/-temp[\\/]?$/.test(context.appOutDir)) return;
+
   const appName = context.packager.appInfo.productFilename + ".app";
   const appPath = path.join(context.appOutDir, appName);
 
