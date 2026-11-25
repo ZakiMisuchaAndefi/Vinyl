@@ -80,7 +80,7 @@ npm run dist:mac   # macOS DMG + ZIP universal (harus di macOS)
 
 **Kenapa nggak ada Spotify?** Pemutaran Spotify butuh Premium, OAuth, dan Web Playback SDK — arsitekturnya beda. Vinyl pakai `<audio>` biasa.
 
-**Boleh fork atau ubah?** Boleh banget! Proyek ini berlisensi MIT (lihat [LICENSE](LICENSE)), cukup sertakan pemberitahuan hak cipta dan kredit pihak ketiga di [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) ya.
+**Boleh fork atau ubah?** Boleh banget! Proyek ini berlisensi **GPL-3.0-or-later** (lihat [LICENSE](LICENSE)) — jadi kalau kamu memodifikasi atau mendistribusikan ulang, turunannya juga harus tetap open source di bawah GPL-3.0 (atau lebih baru), plus sertakan pemberitahuan hak cipta dan kredit pihak ketiga di [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) ya.
 
 ## Terima kasih ☆*: .｡. o(≧▽≦)o .｡.:*☆
 
@@ -105,7 +105,7 @@ Dan buat kamu yang melaporkan bug, memberi masukan, atau sekadar mampir dengerin
 
 ## Lisensi
 
-Vinyl dilisensikan di bawah **MIT License** — lihat berkas [LICENSE](LICENSE) untuk teks lengkapnya. Untuk komponen pihak ketiga yang dibundel atau dirujuk, cek [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) ya :3
+Vinyl dilisensikan di bawah **GNU General Public License v3.0 or later (`GPL-3.0-or-later`)** — lihat berkas [LICENSE](LICENSE) untuk teks lengkapnya. Untuk komponen pihak ketiga yang dibundel atau dirujuk, cek [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) ya :3
 
 ## Disclaimer
 
