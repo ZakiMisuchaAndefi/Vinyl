@@ -5028,7 +5028,7 @@
       '<div class="settings-row__action"><button class="text-btn" type="button" data-action="settings-shortcuts">Pintasan</button></div></div>' +
       settingsInstallRow() +
       '<p class="about-line">Dibuat dengan HTML, CSS, dan JavaScript murni, ditambah fungsi serverless untuk pencarian dan streaming. <strong>Space</strong> putar/jeda · <strong>←/→</strong> geser 5 detik · <strong>⌘K/Ctrl K</strong> cari · <strong>M</strong> bisukan · <strong>Q</strong> antrean.</p>' +
-      '<p class="about-line">Lisensi: MIT Â· <a href="https://github.com/ZakiMisuchaAndefi/Vinyl/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Lihat pemberitahuan pihak ketiga</a>.</p>' +
+      '<p class="about-line">Lisensi: GPL-3.0-or-later Â· <a href="https://github.com/ZakiMisuchaAndefi/Vinyl/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Lihat pemberitahuan pihak ketiga</a>.</p>' +
       '<p class="about-line">Terima kasih untuk proyek open source dan layanan yang membuat Vinyl mungkin. <a href="https://github.com/ZakiMisuchaAndefi/Vinyl#terima-kasih--kredit" target="_blank" rel="noopener noreferrer">Lihat kredit lengkap</a>.</p>' +
       '<div class="settings-profile" data-setting="social">' +
       '<img class="settings-profile__avatar" src="/assets/dev-avatar.jpg" alt="Foto profil Instagram @zzkyand__" width="64" height="64">' +
