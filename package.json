@@ -4,6 +4,7 @@
   "private": true,
   "description": "Pemutar musik streaming bergaya semi-Apple Music di browser, lengkap dengan FLAC lossless dan unduhan langsung dari browser.",
   "author": "ZakiMisuchaAndefi",
+  "license": "MIT",
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
@@ -40,7 +41,13 @@
       "api/**/*",
       "electron/**/*",
       "build/icon.ico",
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md",
       "!**/*.map"
+    ],
+    "extraResources": [
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md"
     ],
     "publish": {
       "provider": "github",
