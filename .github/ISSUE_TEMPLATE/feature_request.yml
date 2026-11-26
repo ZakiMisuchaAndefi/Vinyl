@@ -1,0 +1,25 @@
+name: Usulan fitur
+description: Punya ide yang bisa bikin Vinyl makin asyik?
+title: "[Ide]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Masalah yang ingin diatasi
+      description: Ceritakan kebutuhan atau hal yang terasa merepotkan.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Ide solusi
+      description: Jelaskan fitur atau perubahan yang kamu bayangkan.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatif yang sudah dicoba (opsional)
+    validations:
+      required: false
