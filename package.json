@@ -2,9 +2,27 @@
   "name": "vinyl",
   "version": "1.1.0",
   "private": true,
-  "description": "Pemutar musik streaming bergaya semi-Apple Music di browser, lengkap dengan FLAC lossless dan unduhan langsung dari browser.",
-  "author": "ZakiMisuchaAndefi",
+  "description": "Vinyl adalah pemutar musik streaming di browser bergaya semi-Apple Music. Putar dan unduh lagu sebagai FLAC lossless atau audio sumber YouTube langsung dari browser, tanpa memasang aplikasi, akun, atau iklan. Dilengkapi lirik sinkron, radio otomatis, dan perpustakaan pribadi opsional.",
+  "author": "Zaki Misucha Andefi",
   "license": "GPL-3.0-or-later",
+  "homepage": "https://vinyl.my.id",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZakiMisuchaAndefi/Vinyl.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ZakiMisuchaAndefi/Vinyl/issues"
+  },
+  "keywords": [
+    "music",
+    "streaming",
+    "player",
+    "flac",
+    "lossless",
+    "lyrics",
+    "electron",
+    "pwa"
+  ],
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
