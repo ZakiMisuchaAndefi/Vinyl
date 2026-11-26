@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ambil kode
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Buat release draf
         env:
@@ -39,7 +39,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Ambil kode
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Siapkan Node.js
         uses: actions/setup-node@v4
@@ -72,7 +72,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Ambil kode
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Siapkan Node.js
         uses: actions/setup-node@v4
@@ -144,7 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ambil kode
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Publikasikan release
         env:
