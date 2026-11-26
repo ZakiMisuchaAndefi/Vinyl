@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 ﻿/* ==========================================================================
    youtube.js — pencarian YouTube (InnerTube) + audio melalui proxy server
    Pencarian memakai API internal YouTube (InnerTube) lewat /api/search.

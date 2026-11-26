@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    demo.js — perpustakaan demo prosedural (WAV yang dibuat di browser)
    Dipakai agar aplikasi bisa dicoba tanpa file musik pengguna.

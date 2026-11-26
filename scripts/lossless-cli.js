@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* CLI kecil untuk server.ps1: menerima query base64 dan mengembalikan JSON
    hasil resolver lossless. Dipakai agar logika lokal sama dengan Vercel. */
 

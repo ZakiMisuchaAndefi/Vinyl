@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // CLI kecil untuk server.ps1 (pengembangan lokal).
 // Tujuannya agar server lokal memakai resolver yang sama persis dengan
 // fungsi /api di Vercel: api/_innertube.js, api/_lib.js, dan api/radio.js.

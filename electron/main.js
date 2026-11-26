@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    electron/main.js — entry aplikasi desktop Vinyl.
 

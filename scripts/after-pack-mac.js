@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    scripts/after-pack-mac.js — tanda tangan ad-hoc untuk build macOS tanpa
    sertifikat Apple.

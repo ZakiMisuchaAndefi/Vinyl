@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 # Membuat build/icon.ico multi-ukuran dari assets/icons/icon-512.png.
 # Setiap ukuran disimpan sebagai PNG di dalam wadah ICO (didukung Windows Vista+).
 

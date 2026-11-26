@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 const { search, searchMore } = require("./_innertube");
 
 const TTL = 5 * 60 * 1000;

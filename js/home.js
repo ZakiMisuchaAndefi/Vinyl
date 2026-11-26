@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    home.js — feed streaming untuk menu utama (rekomendasi, stasiun, populer)
    Sumber: pencarian musik YouTube lewat AM.Youtube.search (tanpa API key).

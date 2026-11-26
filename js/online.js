@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    online.js — musik online tanpa API key
    Sumber: YouTube — cari lagu dengan kata kunci, atau tempel tautan video.

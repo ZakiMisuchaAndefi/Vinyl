@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Klien InnerTube (API internal YouTube) untuk pencarian.
 // Referensi: https://github.com/tombulled/innertube
 // Tidak butuh API key resmi; memakai API key publik milik klien web YouTube.

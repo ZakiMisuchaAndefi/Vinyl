@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    romanize.js — romanisasi lirik lokal (tanpa API)
    Mendukung: Han (pinyin-pro), Hangul, kana Jepang, Arab/Persia, Kiril, Thai.
