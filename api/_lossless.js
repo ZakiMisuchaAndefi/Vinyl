@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    _lossless.js — pencari audio lossless (FLAC) untuk streaming.
 

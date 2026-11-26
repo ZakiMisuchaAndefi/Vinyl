@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    electron/preload.js — jembatan aman antara halaman dan proses utama.
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    downloads.js — unduhan audio langsung dari browser.
 

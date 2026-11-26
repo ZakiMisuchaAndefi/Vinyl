@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 const lib = require("./_lossless");
 
 // Mencari versi FLAC dari metadata lagu. URL audio yang dikembalikan diputar

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 const { Readable } = require("stream");
 const lib = require("./_lib");
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    electron/server.js — server lokal untuk aplikasi desktop Vinyl.
 

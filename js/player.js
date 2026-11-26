@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    player.js — antrean, pemutaran, shuffle/repeat, media session
    ========================================================================== */

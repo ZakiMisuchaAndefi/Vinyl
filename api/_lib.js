@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Helper bersama untuk fungsi /api (file berawalan _ tidak dijadikan endpoint).
 //
 // Audio YouTube diselesaikan lewat klien "visionOS" milik InnerTube. Klien ini

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    sw.js — service worker Vinyl
    Menyimpan kerangka aplikasi agar Vinyl bisa dibuka tanpa jaringan.

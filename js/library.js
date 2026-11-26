@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    library.js — state perpustakaan, impor, playlist, pencarian, cache URL
    ========================================================================== */

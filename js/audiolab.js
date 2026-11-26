@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    audiolab.js — graf Web Audio untuk Audio Lab (equalizer, mono, kompresor)
 

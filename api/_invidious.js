@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    _invidious.js — pemilih instance Invidious untuk streaming audio.
 

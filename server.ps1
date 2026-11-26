@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 # ==========================================================================
 # server.ps1 - server statis kecil + resolver audio lokal (InnerTube).
 # Jalankan dari PowerShell:  .\server.ps1

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 const lib = require("./_lib");
 
 // Mengembalikan URL proxy (/api/stream) karena URL googlevideo terikat ke IP yang me-resolve-nya.

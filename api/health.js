@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 // Instance Invidious publik yang dipakai sebagai sumber audio di Vercel.
 // YouTube memblokir semua permintaan audio dari IP datacenter, jadi audio
 // diambil dari instance ini dan diputar langsung oleh browser pengunjung.
