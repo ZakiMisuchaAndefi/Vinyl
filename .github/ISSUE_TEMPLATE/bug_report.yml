@@ -1,0 +1,52 @@
+name: Laporan bug
+description: Ada yang tidak berjalan seperti seharusnya?
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Web
+        - Windows
+        - macOS
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versi Vinyl
+      description: Untuk web, isi alamat situs atau versi yang terlihat di Tentang.
+      placeholder: "contoh: 1.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Langkah untuk mereproduksi
+      description: Tulis langkah-langkahnya satu per satu, ya.
+      placeholder: "1. Buka...\n2. Pilih...\n3. Bug muncul..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Yang diharapkan
+      placeholder: Apa yang seharusnya terjadi?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Yang terjadi
+      placeholder: Apa yang benar-benar terjadi?
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshot atau rekaman (opsional)
+      description: Kalau membantu, seret gambar atau rekaman ke kolom ini.
+    validations:
+      required: false

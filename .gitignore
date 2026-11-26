@@ -1,3 +1,9 @@
 node_modules/
 dist/
 *.log
+.vercel/
+.env
+.env.*
+!.env.example
+Thumbs.db
+.DS_Store
