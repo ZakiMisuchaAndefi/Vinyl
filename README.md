@@ -11,6 +11,7 @@
   <a href="https://github.com/ZakiMisuchaAndefi/Vinyl/releases"><img src="https://img.shields.io/github/downloads/ZakiMisuchaAndefi/Vinyl/total?style=flat-square&label=downloads&color=8ecae6&labelColor=1e1e2e" alt="Unduhan" /></a>
   <img src="https://img.shields.io/badge/platform-web%20%7C%20windows%20%7C%20macOS-ffd166?style=flat-square&labelColor=1e1e2e" alt="Platform" />
   <a href="https://github.com/ZakiMisuchaAndefi/Vinyl/stargazers"><img src="https://img.shields.io/github/stars/ZakiMisuchaAndefi/Vinyl?style=flat-square&label=stars&color=c8b6ff&labelColor=1e1e2e" alt="Stars" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-a6e3a1?style=flat-square&labelColor=1e1e2e" alt="Lisensi GPL-3.0-or-later" /></a>
 </div>
 
 > [!WARNING]
@@ -81,6 +82,10 @@ npm run dist:mac   # macOS DMG + ZIP universal (harus di macOS)
 **Kenapa nggak ada Spotify?** Pemutaran Spotify butuh Premium, OAuth, dan Web Playback SDK — arsitekturnya beda. Vinyl pakai `<audio>` biasa.
 
 **Boleh fork atau ubah?** Boleh banget! Proyek ini berlisensi **GPL-3.0-or-later** (lihat [LICENSE](LICENSE)) — jadi kalau kamu memodifikasi atau mendistribusikan ulang, turunannya juga harus tetap open source di bawah GPL-3.0 (atau lebih baru), plus sertakan pemberitahuan hak cipta dan kredit pihak ketiga di [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) ya.
+
+## Mau bantu?
+
+Punya ide, nemu bug, atau mau kirim PR? Mampir ke [CONTRIBUTING.md](CONTRIBUTING.md) buat panduan singkatnya ya (●'◡'●)
 
 ## Terima kasih ☆*: .｡. o(≧▽≦)o .｡.:*☆
 

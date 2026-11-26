@@ -1,21 +1,25 @@
-# Security Policy
+# Kebijakan Keamanan (Security Policy)
 
-## Supported Versions
+## Versi yang Didukung
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+Vinyl adalah proyek pribadi yang aktif dikembangkan pada versi terbaru saja:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+| Versi | Didukung |
+| --- | --- |
+| `1.1.x` (terbaru) | :white_check_mark: |
+| `< 1.1` | :x: |
 
-## Reporting a Vulnerability
+## Melaporkan Kerentanan Keamanan
 
-Use this section to tell people how to report a vulnerability.
+Kalau kamu menemukan celah keamanan (misalnya di endpoint `/api/*`, Electron preload/IPC, atau server lokal), **jangan buka issue publik**. Laporkan secara privat supaya bisa ditangani sebelum dipublikasikan:
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+1. Gunakan fitur **[GitHub Private Vulnerability Reporting](https://github.com/ZakiMisuchaAndefi/Vinyl/security/advisories/new)** di tab **Security** repositori ini (paling disarankan).
+2. *(Opsional)* **TODO:** Isi alamat email kontak keamanan jika ingin menerima laporan lewat email.
+
+### Estimasi Waktu Respons
+
+Karena ini proyek pribadi yang dikerjakan di waktu luang:
+- Konfirmasi awal laporan: maksimal **3–7 hari**.
+- Penilaian dan rencana perbaikan: tergantung tingkat keparahan dan ketersediaan waktu pengelola.
+
+Terima kasih sudah membantu menjaga Vinyl tetap aman!
