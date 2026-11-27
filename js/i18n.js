@@ -373,6 +373,8 @@
       "to get the lossless version from the Tracks catalog; if the song isn't available, the best YouTube audio is downloaded. Other options download the source YouTube audio (OPUS/AAC).",
     "MP3, M4A, FLAC, WAV, OGG, dan format audio lain yang didukung browser.":
       "MP3, M4A, FLAC, WAV, OGG, and other audio formats your browser supports.",
+    "Perpustakaan demo": "Demo library",
+    "Penyimpanan": "Storage",
     "Tambahkan 12 lagu contoh untuk mencoba semua fitur tanpa file pribadi.":
       "Add 12 sample songs to try every feature without your own files.",
     "Memori": "Memory",
@@ -914,13 +916,13 @@
     numberRule("^" + NUMBER + "\\s+lagu\\s+dalam riwayat\\s+·\\s+terbaru di atas$", (n) => n + (n === "1" ? " song" : " songs") + " in history · newest first"),
     numberRule("^" + NUMBER + "\\s+artis\\s+di koleksimu$", (n) => n + (n === "1" ? " artist" : " artists") + " in your collection"),
     numberRule("^Berikutnya\\s+·\\s+" + NUMBER + "\\s+lagu$", (n) => "Up next · " + n + (n === "1" ? " song" : " songs")),
-    numberRule("^" + NUMBER + "\\s+lagu\\s+·\\s+(.+)$", (n, rest) => n + (n === "1" ? " song" : " songs") + " · " + translateCore(rest, null)),
-    numberRule("^" + NUMBER + "\\s+album\\s+·\\s+" + NUMBER + "\\s+lagu$", (albums, tracks) =>
-      albums + (albums === "1" ? " album" : " albums") + " · " + tracks + (tracks === "1" ? " song" : " songs")),
     numberRule("^" + NUMBER + "\\s+lagu\\s+·\\s+" + NUMBER + "\\s+album\\s+·\\s+" + NUMBER + "\\s+artis$", (songs, albums, artists) =>
       songs + (songs === "1" ? " song" : " songs") + " · " +
       albums + (albums === "1" ? " album" : " albums") + " · " +
       artists + (artists === "1" ? " artist" : " artists")),
+    numberRule("^" + NUMBER + "\\s+lagu\\s+·\\s+(.+)$", (n, rest) => n + (n === "1" ? " song" : " songs") + " · " + translateCore(rest, null)),
+    numberRule("^" + NUMBER + "\\s+album\\s+·\\s+" + NUMBER + "\\s+lagu$", (albums, tracks) =>
+      albums + (albums === "1" ? " album" : " albums") + " · " + tracks + (tracks === "1" ? " song" : " songs")),
     numberRule("^" + NUMBER + "\\s+lagu dipilih$", (n) => n + (n === "1" ? " song selected" : " songs selected")),
     numberRule("^" + NUMBER + "\\s+lagu diimpor ke perpustakaan\\.$", (n) => n + (n === "1" ? " song imported to your library." : " songs imported to your library.")),
     numberRule("^" + NUMBER + "\\s+lagu ditambahkan ke perpustakaanmu$", (n) => n + (n === "1" ? " song added to your library" : " songs added to your library")),
@@ -931,11 +933,11 @@
     numberRule("^" + NUMBER + "\\s+j$", (h) => h + " hr"),
     numberRule("^" + NUMBER + "\\s+mnt$", (m) => m + " min"),
     numberRule("^" + NUMBER + "\\s+dtk$", (s) => s + " sec"),
-    numberRule("^" + NUMBER + "\\s+menit lalu$", (n) => n + " minutes ago"),
-    numberRule("^" + NUMBER + "\\s+jam lalu$", (n) => n + " hours ago"),
-    numberRule("^" + NUMBER + "\\s+hari lalu$", (n) => n + " days ago"),
-    numberRule("^" + NUMBER + "\\s+menit$", (n) => n + " minutes"),
-    numberRule("^" + NUMBER + "\\s+detik$", (n) => n + " seconds"),
+    numberRule("^" + NUMBER + "\\s+menit lalu$", (n) => n + (n === "1" ? " minute ago" : " minutes ago")),
+    numberRule("^" + NUMBER + "\\s+jam lalu$", (n) => n + (n === "1" ? " hour ago" : " hours ago")),
+    numberRule("^" + NUMBER + "\\s+hari lalu$", (n) => n + (n === "1" ? " day ago" : " days ago")),
+    numberRule("^" + NUMBER + "\\s+menit$", (n) => n + (n === "1" ? " minute" : " minutes")),
+    numberRule("^" + NUMBER + "\\s+detik$", (n) => n + (n === "1" ? " second" : " seconds")),
 
     /* Sapaan */
     [/^Selamat (pagi|siang|sore|malam)(?:,\s*(.+))?\.$/, (match, part, name) => {

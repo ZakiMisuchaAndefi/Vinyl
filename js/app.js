@@ -864,7 +864,11 @@
 
     const result = AM.Views.render(els.view, route);
     state.viewTitle = result && result.title ? result.title : "Vinyl";
-    if (els.topbarTitle) els.topbarTitle.textContent = state.viewTitle;
+    if (els.topbarTitle) {
+      els.topbarTitle.textContent = state.viewTitle;
+      if (viewTitleIsUserContent()) els.topbarTitle.setAttribute("data-i18n-skip", "");
+      else els.topbarTitle.removeAttribute("data-i18n-skip");
+    }
     if (AM.I18n && typeof AM.I18n.apply === "function") AM.I18n.apply(els.view);
 
     if (route.name === "home" && AM.Home) {
@@ -1011,10 +1015,18 @@
     refreshView({ keepScroll: true });
   }
 
+  // Judul rute album/artis/playlist/genre berasal dari konten pengguna, jadi
+  // tidak boleh ikut diterjemahkan.
+  const USER_TITLE_ROUTES = { album: true, artist: true, playlist: true, genre: true };
+
+  function viewTitleIsUserContent() {
+    return !!(state.currentRoute && USER_TITLE_ROUTES[state.currentRoute.name]);
+  }
+
   function updateDocumentTitle() {
     const track = P.currentTrack();
     if (track) document.title = track.title + " — " + track.artist + " · Vinyl";
-    else document.title = T(state.viewTitle) + " · Vinyl";
+    else document.title = (viewTitleIsUserContent() ? state.viewTitle : T(state.viewTitle)) + " · Vinyl";
   }
 
   /* ------------------------------------------------------------------------
@@ -1885,6 +1897,8 @@
 
     if (els.lyricsTitle) {
       els.lyricsTitle.textContent = track ? track.title : "Lirik";
+      if (track) els.lyricsTitle.setAttribute("data-i18n-skip", "");
+      else els.lyricsTitle.removeAttribute("data-i18n-skip");
     }
     if (els.lyricsArtist) {
       els.lyricsArtist.textContent = track ? track.artist || "" : "";
@@ -5080,7 +5094,7 @@
       settingsInstallRow() +
       '<p class="about-line">Dibuat dengan HTML, CSS, dan JavaScript murni, ditambah fungsi serverless untuk pencarian dan streaming. <strong>Space</strong> putar/jeda · <strong>←/→</strong> geser 5 detik · <strong>⌘K/Ctrl K</strong> cari · <strong>M</strong> bisukan · <strong>Q</strong> antrean.</p>' +
       '<p class="about-line">Versi ' +
-      escapeHTML(version) +
+      U.esc(version) +
       ' · Lisensi: GPL-3.0-or-later · <a href="https://github.com/ZakiMisuchaAndefi/Vinyl" target="_blank" rel="noopener noreferrer">Kode sumber</a> · <a href="https://github.com/ZakiMisuchaAndefi/Vinyl/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Pemberitahuan pihak ketiga</a>.</p>' +
       '<p class="about-line">Terima kasih untuk proyek open source dan layanan yang membuat Vinyl mungkin. <a href="https://github.com/ZakiMisuchaAndefi/Vinyl#terima-kasih--" target="_blank" rel="noopener noreferrer">Lihat kredit lengkap</a>.</p>' +
       '<div class="settings-profile" data-setting="social">' +
