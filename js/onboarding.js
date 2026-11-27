@@ -869,6 +869,15 @@
   }
 
   function onClick(event) {
+    const langButton = event.target.closest("[data-ob-lang]");
+    if (langButton) {
+      if (AM.I18n && typeof AM.I18n.setLanguage === "function") {
+        AM.I18n.setLanguage(langButton.dataset.obLang === "id" ? "id" : "en");
+      }
+      syncLangButtons();
+      return;
+    }
+
     const themeButton = event.target.closest("[data-ob-theme]");
     if (themeButton) {
       selectTheme(themeButton.dataset.obTheme);
@@ -947,6 +956,16 @@
      Buka & init
      ------------------------------------------------------------------------ */
 
+  function syncLangButtons() {
+    if (!layer) return;
+    const lang = AM.I18n && typeof AM.I18n.language === "function" ? AM.I18n.language() : "en";
+    layer.querySelectorAll("[data-ob-lang]").forEach(function (button) {
+      const active = button.dataset.obLang === lang;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
   function build() {
     layer = document.createElement("div");
     layer.className = "onboarding";
@@ -958,6 +977,10 @@
     layer.innerHTML =
       '<div class="onboarding__aura" aria-hidden="true"></div>' +
       '<button class="onboarding__skip" type="button" data-ob-action="skip">Lewati</button>' +
+      '<div class="onboarding__lang" role="group" aria-label="Bahasa">' +
+      '<button class="onboarding__lang-btn" type="button" data-ob-lang="en">EN</button>' +
+      '<button class="onboarding__lang-btn" type="button" data-ob-lang="id">ID</button>' +
+      "</div>" +
       '<div class="onboarding__stage">' +
       '<div class="onboarding__hero" data-ob="hero"></div>' +
       '<div class="onboarding__copy">' +
@@ -978,6 +1001,7 @@
     layer.addEventListener("input", onInput);
     layer.addEventListener("keydown", onKeydown);
     layer.addEventListener("submit", onSubmit);
+    syncLangButtons();
   }
 
   function open(options) {

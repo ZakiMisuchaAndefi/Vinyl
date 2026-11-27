@@ -5,6 +5,7 @@ Semua perubahan penting pada proyek **Vinyl** dicatat di sini. Format mengikuti 
 ## [Unreleased]
 
 ### Ditambahkan
+- Antarmuka dua bahasa (English dan Indonesia) dengan pilihan bahasa di Pengaturan → Tampilan dan setup awal, default English, serta format tanggal, durasi, dan pengurutan yang mengikuti bahasa aktif.
 - Info lisensi **GPL-3.0-or-later**, kode sumber, dan pemberitahuan pihak ketiga di Tentang serta berkas lisensi di bundel desktop.
 - Dokumentasi lisensi dan kontribusi komunitas, template GitHub, Dependabot, dan konfigurasi repo.
 - Header SPDX pada sumber proyek serta pemeriksaan CI ringan untuk sintaks JavaScript.

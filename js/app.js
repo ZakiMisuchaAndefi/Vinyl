@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
 /* ==========================================================================
    app.js — bootstrap, router, aksi UI, impor, playlist, pengaturan
    ========================================================================== */
@@ -10,6 +11,10 @@
   const O = AM.Online;
   const P = AM.Player;
   const UI = AM.UI;
+
+  function T(text, vars) {
+    return AM.I18n && typeof AM.I18n.t === "function" ? AM.I18n.t(text, vars) : text;
+  }
 
   const KNOWN_ROUTES = new Set([
     "home",
@@ -376,6 +381,18 @@
     } catch (error) {
       console.error("[app] gagal memuat perpustakaan:", error);
       toast("Gagal memuat perpustakaan. Coba muat ulang halaman.", { type: "error", duration: 8000 });
+    }
+
+    if (AM.I18n && typeof AM.I18n.hydrate === "function") {
+      AM.I18n.hydrate(L.getSetting("language", null));
+    }
+    if (AM.I18n && typeof AM.I18n.onChange === "function") {
+      AM.I18n.onChange(function () {
+        renderSidebarPlaylists();
+        updateDocumentTitle();
+        syncPlayerBar(P.getState());
+        if (state.booted && state.currentRoute) refreshView({ keepScroll: true });
+      });
     }
 
     applyTheme(L.getSetting("theme", "dark"), false);
@@ -848,6 +865,7 @@
     const result = AM.Views.render(els.view, route);
     state.viewTitle = result && result.title ? result.title : "Vinyl";
     if (els.topbarTitle) els.topbarTitle.textContent = state.viewTitle;
+    if (AM.I18n && typeof AM.I18n.apply === "function") AM.I18n.apply(els.view);
 
     if (route.name === "home" && AM.Home) {
       AM.Home.load().catch((error) => {
@@ -996,7 +1014,7 @@
   function updateDocumentTitle() {
     const track = P.currentTrack();
     if (track) document.title = track.title + " — " + track.artist + " · Vinyl";
-    else document.title = state.viewTitle + " · Vinyl";
+    else document.title = T(state.viewTitle) + " · Vinyl";
   }
 
   /* ------------------------------------------------------------------------
@@ -1045,6 +1063,7 @@
         .join("");
     }
     if (state.currentRoute) updateActiveNav(state.currentRoute);
+    if (AM.I18n && typeof AM.I18n.apply === "function") AM.I18n.apply(els.sidebarPlaylists);
   }
 
   function updateStorageInfo() {
@@ -1060,6 +1079,7 @@
       L.state.storage === "indexeddb"
         ? "Koleksi tersimpan di IndexedDB browser ini"
         : "IndexedDB tidak tersedia — koleksi hanya bertahan selama tab ini terbuka";
+    if (AM.I18n && typeof AM.I18n.apply === "function") AM.I18n.apply(els.storageInfo);
   }
 
   function openSearch() {
@@ -1518,6 +1538,7 @@
     syncSettingsControls();
     updateDocumentTitle();
     syncNowPlaying(s);
+    if (AM.I18n && typeof AM.I18n.apply === "function") AM.I18n.apply(els.player);
   }
 
   /* ------------------------------------------------------------------------
@@ -1624,7 +1645,7 @@
     if (els.npContext) {
       const label = s.context && s.context.label ? String(s.context.label) : "";
       const source = track && track.album ? track.album : label || (online ? "internet" : "Perpustakaan");
-      els.npContext.textContent = "From " + source;
+      els.npContext.textContent = "Dari " + source;
     }
 
     const liked = !!track && !!track.liked;
@@ -1659,6 +1680,7 @@
     }
     if (els.npRepeatOne) els.npRepeatOne.hidden = s.repeat !== "one";
     // npExpand does not need aria-pressed sync
+    if (AM.I18n && typeof AM.I18n.apply === "function") AM.I18n.apply(els.nowPlaying);
   }
 
   function updateNowPlayingTime(detail) {
@@ -1699,6 +1721,7 @@
       els.seek.setAttribute("aria-valuemax", String(Math.round(duration)));
       els.seek.setAttribute("aria-valuenow", String(Math.round(current)));
       els.seek.setAttribute("aria-valuetext", U.fmtTime(current) + " dari " + U.fmtTime(duration));
+      if (AM.I18n && typeof AM.I18n.apply === "function") AM.I18n.apply(els.seek);
     }
     if (els.curTime) els.curTime.textContent = U.fmtTime(current);
     if (els.durTime) els.durTime.textContent = U.fmtTime(duration);
@@ -1712,6 +1735,7 @@
       els.volume.style.setProperty("--pct", volume * 100 + "%");
       els.volume.setAttribute("aria-valuenow", String(Math.round(volume * 100)));
       els.volume.setAttribute("aria-valuetext", muted ? "Bisu" : Math.round(volume * 100) + "%");
+      if (AM.I18n && typeof AM.I18n.apply === "function") AM.I18n.apply(els.volume);
     }
     if (els.btnMute) {
       const name = muted || volume === 0 ? "volume-x" : volume < 0.5 ? "volume-1" : "volume-2";
@@ -1744,6 +1768,10 @@
       els.queueCount.textContent = queue.queue.length + " lagu";
     }
     if (els.queueClear) els.queueClear.disabled = !queue.queue.length;
+    if (AM.I18n && typeof AM.I18n.apply === "function") {
+      AM.I18n.apply(els.queueBody);
+      AM.I18n.apply(els.queueCount);
+    }
     updateQueueIndicator();
   }
 
@@ -2787,6 +2815,12 @@
         return;
       case "set-theme":
         applyTheme(actionEl.dataset.theme || "dark", true);
+        return;
+      case "set-language":
+        if (AM.I18n && typeof AM.I18n.setLanguage === "function") {
+          AM.I18n.setLanguage(actionEl.dataset.value === "id" ? "id" : "en");
+          syncSettingsControls();
+        }
         return;
       case "set-shuffle":
         P.setShuffle(actionEl.dataset.value === "true");
@@ -4686,6 +4720,7 @@
   // data-setting pada baris tujuan; `keywords` membantu pencocokan longgar.
   const SETTINGS_INDEX = [
     { id: "theme", label: "Tema", section: "tampilan", keywords: "tema tampilan mode gelap terang amoled dark light" },
+    { id: "language", label: "Bahasa", section: "tampilan", keywords: "bahasa language english indonesia inggris terjemahan locale" },
     { id: "shuffle", label: "Acak", section: "pemutaran", keywords: "acak shuffle random urutan antrean" },
     { id: "repeat", label: "Ulangi", section: "pemutaran", keywords: "ulangi repeat loop semua satu" },
     { id: "sleep", label: "Timer tidur", section: "pemutaran", keywords: "timer tidur sleep otomatis berhenti" },
@@ -4726,6 +4761,21 @@
       '" type="button" data-action="set-theme" data-theme="light">' +
       icon("sun") +
       "Terang</button>" +
+      "</div></div></div>"
+    );
+  }
+
+  function settingsLanguageRow() {
+    const lang = AM.I18n && typeof AM.I18n.language === "function" ? AM.I18n.language() : "en";
+    return (
+      '<div class="settings-row" data-setting="language"><div class="settings-row__text"><div class="settings-row__title">Bahasa</div><div class="settings-row__sub">Pilih bahasa yang dipakai Vinyl.</div></div>' +
+      '<div class="settings-row__action"><div class="segmented">' +
+      '<button class="segmented__btn' +
+      (lang === "en" ? " is-active" : "") +
+      '" type="button" data-action="set-language" data-value="en">English</button>' +
+      '<button class="segmented__btn' +
+      (lang === "id" ? " is-active" : "") +
+      '" type="button" data-action="set-language" data-value="id">Indonesia</button>' +
       "</div></div></div>"
     );
   }
@@ -5023,13 +5073,16 @@
   }
 
   function settingsAboutHTML() {
+    const version = isDesktopApp() && window.vinylDesktop.version ? window.vinylDesktop.version : "1.1.0";
     return (
       '<div class="settings-row" data-setting="shortcuts"><div class="settings-row__text"><div class="settings-row__title">Vinyl</div><div class="settings-row__sub">Pemutar musik streaming bergaya semi-Apple Music di browser. Tanpa akun, lengkap dengan FLAC lossless dan unduhan langsung dari browser.</div></div>' +
       '<div class="settings-row__action"><button class="text-btn" type="button" data-action="settings-shortcuts">Pintasan</button></div></div>' +
       settingsInstallRow() +
       '<p class="about-line">Dibuat dengan HTML, CSS, dan JavaScript murni, ditambah fungsi serverless untuk pencarian dan streaming. <strong>Space</strong> putar/jeda · <strong>←/→</strong> geser 5 detik · <strong>⌘K/Ctrl K</strong> cari · <strong>M</strong> bisukan · <strong>Q</strong> antrean.</p>' +
-      '<p class="about-line">Lisensi: GPL-3.0-or-later Â· <a href="https://github.com/ZakiMisuchaAndefi/Vinyl/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Lihat pemberitahuan pihak ketiga</a>.</p>' +
-      '<p class="about-line">Terima kasih untuk proyek open source dan layanan yang membuat Vinyl mungkin. <a href="https://github.com/ZakiMisuchaAndefi/Vinyl#terima-kasih--kredit" target="_blank" rel="noopener noreferrer">Lihat kredit lengkap</a>.</p>' +
+      '<p class="about-line">Versi ' +
+      escapeHTML(version) +
+      ' · Lisensi: GPL-3.0-or-later · <a href="https://github.com/ZakiMisuchaAndefi/Vinyl" target="_blank" rel="noopener noreferrer">Kode sumber</a> · <a href="https://github.com/ZakiMisuchaAndefi/Vinyl/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Pemberitahuan pihak ketiga</a>.</p>' +
+      '<p class="about-line">Terima kasih untuk proyek open source dan layanan yang membuat Vinyl mungkin. <a href="https://github.com/ZakiMisuchaAndefi/Vinyl#terima-kasih--" target="_blank" rel="noopener noreferrer">Lihat kredit lengkap</a>.</p>' +
       '<div class="settings-profile" data-setting="social">' +
       '<img class="settings-profile__avatar" src="/assets/dev-avatar.jpg" alt="Foto profil Instagram @zzkyand__" width="64" height="64">' +
       '<div class="settings-profile__body">' +
@@ -5051,7 +5104,7 @@
   function settingsRowsFor(section) {
     switch (section) {
       case "tampilan":
-        return settingsThemeRow();
+        return settingsThemeRow() + settingsLanguageRow();
       case "pemutaran":
         return settingsShuffleRow() + settingsRepeatRow() + settingsSleepRow();
       case "audio":
@@ -5273,6 +5326,10 @@
     $$('[data-action="set-theme"]', root).forEach((button) => {
       button.classList.toggle("is-active", button.dataset.theme === theme);
     });
+    $$('[data-action="set-language"]', root).forEach((button) => {
+      const lang = AM.I18n && typeof AM.I18n.language === "function" ? AM.I18n.language() : "en";
+      button.classList.toggle("is-active", (button.dataset.value || "en") === lang);
+    });
     $$('[data-action="set-shuffle"]', root).forEach((button) => {
       button.classList.toggle("is-active", (button.dataset.value === "true") === !!P.state.shuffle);
     });
@@ -5338,7 +5395,7 @@
     const quality =
       STREAM_FORMATS.find((item) => item.id === id) ||
       DOWNLOAD_QUALITIES.find((item) => item.id === id);
-    return quality ? quality.label + " (" + quality.hint + ")" : "Tinggi (audio sumber)";
+    return quality ? quality.label + " (" + T(quality.hint) + ")" : "Tinggi (audio sumber)";
   }
 
   async function applyStreamQuality(value) {

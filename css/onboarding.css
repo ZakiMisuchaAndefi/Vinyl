@@ -275,6 +275,44 @@ html.has-onboarding body {
   display: none !important;
 }
 
+/* Pemilih bahasa ringkas: selalu terlihat agar bisa diganti kapan saja. */
+.onboarding__lang {
+  position: absolute;
+  top: max(20px, env(safe-area-inset-top));
+  left: 20px;
+  z-index: 2;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--ob-hover);
+}
+
+.onboarding__lang-btn {
+  min-width: 42px;
+  height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ob-ink);
+  font-family: var(--font-inter);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.onboarding__lang-btn:hover {
+  background: var(--ob-hover);
+}
+
+.onboarding__lang-btn.is-active {
+  background: var(--ob-ink);
+  color: var(--ob-bg);
+}
+
 /* --------------------------------------------------------------------------
    Panggung ilustrasi
    -------------------------------------------------------------------------- */

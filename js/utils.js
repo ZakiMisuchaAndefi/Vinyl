@@ -53,16 +53,27 @@
     return minutes + ":" + pad2(secs);
   }
 
+  function i18nLocale() {
+    return AM.I18n && typeof AM.I18n.locale === "function" ? AM.I18n.locale() : "id-ID";
+  }
+
+  function isEnglish() {
+    return AM.I18n && typeof AM.I18n.language === "function" && AM.I18n.language() === "en";
+  }
+
   function fmtLongDuration(seconds) {
-    if (!Number.isFinite(seconds) || seconds <= 0) return "0 mnt";
+    const english = isEnglish();
+    if (!Number.isFinite(seconds) || seconds <= 0) return english ? "0 min" : "0 mnt";
     const minutes = Math.round(seconds / 60);
-    if (minutes < 60) return minutes + " mnt";
+    if (minutes < 60) return minutes + (english ? " min" : " mnt");
     const hours = Math.floor(minutes / 60);
     const rest = minutes % 60;
+    if (english) return rest ? hours + " hr " + rest + " min" : hours + " hr";
     return rest ? hours + " j " + rest + " mnt" : hours + " j";
   }
 
   function fmtCount(count, word) {
+    if (AM.I18n && typeof AM.I18n.count === "function") return AM.I18n.count(count, word);
     return count + " " + word;
   }
 
@@ -77,7 +88,7 @@
   function fmtDate(timestamp) {
     if (!timestamp) return "";
     try {
-      return new Intl.DateTimeFormat("id-ID", {
+      return new Intl.DateTimeFormat(i18nLocale(), {
         day: "numeric",
         month: "long",
         year: "numeric"
@@ -93,10 +104,11 @@
     const minute = 60000;
     const hour = 3600000;
     const day = 86400000;
-    if (diff < minute) return "Baru saja";
-    if (diff < hour) return Math.floor(diff / minute) + " menit lalu";
-    if (diff < day) return Math.floor(diff / hour) + " jam lalu";
-    if (diff < day * 7) return Math.floor(diff / day) + " hari lalu";
+    const english = isEnglish();
+    if (diff < minute) return english ? "Just now" : "Baru saja";
+    if (diff < hour) return Math.floor(diff / minute) + (english ? " minutes ago" : " menit lalu");
+    if (diff < day) return Math.floor(diff / hour) + (english ? " hours ago" : " jam lalu");
+    if (diff < day * 7) return Math.floor(diff / day) + (english ? " days ago" : " hari lalu");
     return fmtDate(timestamp);
   }
 
@@ -112,7 +124,8 @@
   }
 
   function byText(a, b) {
-    return String(a || "").localeCompare(String(b || ""), "id", {
+    const locale = isEnglish() ? "en" : "id";
+    return String(a || "").localeCompare(String(b || ""), locale, {
       sensitivity: "base",
       numeric: true
     });
