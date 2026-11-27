@@ -36,7 +36,7 @@ Kode Etik ini berlaku di semua ruang lingkup komunitas, dan juga berlaku ketika 
 
 ## Penegakan
 
-Tindakan kasar, pelecehan, atau perilaku tidak dapat diterima lainnya yang terjadi dapat dilaporkan kepada pengelola komunitas melalui **TODO: tambahkan alamat surel atau metode kontak publik untuk pelaporan.** Semua keluhan akan ditinjau dan diselidiki secara tepat dan adil.
+Tindakan kasar, pelecehan, atau perilaku tidak dapat diterima lainnya yang terjadi dapat dilaporkan kepada pengelola komunitas melalui **zakimisucha1977@gmail.com**. Semua keluhan akan ditinjau dan diselidiki secara tepat dan adil.
 
 Semua pengelola berkewajiban untuk menjaga kerahasiaan dan keamanan pelapor suatu insiden.
 
